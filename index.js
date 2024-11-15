@@ -48,8 +48,8 @@ console.log('pid ' + process.ppid);
 const nznode = require('nznode');
 let NODE = new nznode(config, DB, PGP);
 
-let knownMessages = JSON.parse(DB.read(null, 'messages.json'));
-if (!knownMessages) knownMessages = {};
+const nzmessage = require('nzmessage');
+let MESSAGE = new nzmessage(config, DB);
 
 
 
@@ -128,7 +128,7 @@ const requestListener = (async (req, res) => {
 			&& ((await DB.validateName(req.newMessage.hash)) === true)
 			&& (Number.isInteger(req.newMessage.timestamp))
 			&& (req.newMessage.hash === getHASH(req.newMessage.message, 'md5'))
-			&& (knownMessages[req.newMessage.hash] === undefined)) {
+			&& (MESSAGE.messages[req.newMessage.hash] === undefined)) {
 				try {
 					let currentTime = new Date().getTime();
 					let infoNode = await NODE.getInfo({
@@ -139,10 +139,11 @@ const requestListener = (async (req, res) => {
 					if (((await PGP.checkMessage(req.newMessage.message)) === true)
 					&& (req.newMessage.timestamp > (currentTime - 900000))
 					&& ((req.newMessage.timestamp + inequal) < currentTime)) {
-						console.log('\x1b[1m%s\x1b[0m', 'New message:', req.newMessage.hash + ':', req.newMessage.timestamp);
-						knownMessages[req.newMessage.hash] = req.newMessage.timestamp;
-						await DB.write('messages', req.newMessage.hash, req.newMessage.message);
-						await DB.write(null, 'messages.json', JSON.stringify(knownMessages));
+						await MESSAGE.add({
+							hash: req.newMessage.hash,
+							timestamp: req.newMessage.timestamp,
+							message: req.newMessage.message
+						});
 						await NODE.sendMessageToAll({
 							newMessage: {
 								host: config.host,
@@ -162,11 +163,12 @@ const requestListener = (async (req, res) => {
 		} else if ((await PGP.checkMessage(data)) === true) {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
-			if (knownMessages[hash] === undefined) {
-				console.log('\x1b[1m%s\x1b[0m', 'New message:', hash + ':', nonce);
-				knownMessages[hash] = nonce;
-				await DB.write('messages', hash, data);
-				await DB.write(null, 'messages.json', JSON.stringify(knownMessages));
+			if (MESSAGE.messages[hash] === undefined) {
+				await MESSAGE.add({
+					hash: hash,
+					timestamp: nonce,
+					message: data
+				});
 				await NODE.sendMessageToAll({
 					newMessage: {
 						host: config.host,
@@ -212,16 +214,12 @@ const requestListener = (async (req, res) => {
 				break
 			case '/getMessages':
 				res.writeHead(200);
-				res.end(JSON.stringify(knownMessages));
+				res.end(JSON.stringify(MESSAGE.messages));
 				break
 			case '/getMessage':
 				try {
-					if ((args[0]) && (knownMessages[args[0]])) {
-						let message = {
-							hash: args[0],
-							timestamp: knownMessages[args[0]],
-							message: await DB.read('messages', args[0])
-						};
+					let message = MESSAGE.getMessage(args[0]);
+					if (message) {
 						res.writeHead(200);
 						res.end(JSON.stringify(message));
 					} else {
@@ -306,12 +304,11 @@ checkingKeychain
 
 let checkingMessages = setInterval(async () => {
 	let currentTime = new Date().getTime();
-	let keys = Object.keys(knownMessages);
+	let keys = Object.keys(MESSAGE.messages);
 	for (let i = 0, l = keys.length; i < l; i++) {
-		if (knownMessages[keys[i]] < (currentTime - 900000)) {	// 15 min
+		if (MESSAGE.messages[keys[i]] < (currentTime - 900000)) {	// 15 min
 			// deleting old messages
-			await DB.delete('messages', knownMessages[keys[i]]);
-			delete knownMessages[keys[i]]
+			await MESSAGE.remove(keys[i]);
 		}
 	}
 }, 10000);
