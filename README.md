@@ -18,6 +18,7 @@
     - [POST requests](#post-requests)
         - [handshake](#handshake)
         - [newMessage](#newMessage)
+    - [Receiving messages from the client](#receiving-messages-from-the-client)
     - [License](#license)
 
 ### nzserver
@@ -76,6 +77,7 @@ Required parameters for server configuration:
 `pass` - a strong passphrase for the PGP key.
 
 #### Starting a configured server
+
 After configuring the server, the server can be started with the required `config` parameter.
 
 ```sh
@@ -83,6 +85,7 @@ nzserver config="/home/user/somedir/"
 ```
 
 #### Additional options when starting the server
+
 `scan` - scanning the local network for other nodes with port `28262`. Use `scan="on"` to turn on.
 
 
@@ -299,6 +302,65 @@ encrypt.then((value) => {
 });
 ```
 
+
+### Receiving messages from the client
+
+For messages received from the client, the POST request header must contain `'Content-Type': 'text/html'`.
+
+```js
+const http = require('http');
+const securePGPstorage = require('secure-pgp-storage');
+const letsconfig = require('letsconfig');
+
+const config = new letsconfig({}, '/home/user/path/to/config/');
+const PGP = new securePGPstorage();
+
+let encryptedMessage = '';
+
+const encrypt = new Promise((resolve, reject) => {
+    try{
+        (async () => {
+            await PGP.decryptStorage(config.secureKey, config.passphrase)
+            encryptedMessage = await PGP.encryptMessage('Hello world!', PGP.publicKeyArmored, true);
+            console.log(encryptedMessage);
+            resolve(true);
+        })();
+    } catch(e) {
+        console.log(e);
+    }
+});
+
+encrypt.then((value) => {
+    let messageSender = setInterval(async () => {
+        console.log('\nSending request...');
+
+        let options = {
+            host: config.host,
+            port: config.port,
+            path: '/',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/html',
+                'Content-Length': encryptedMessage.length
+            }
+        };
+
+        const req = http.request(options, (res) => {
+            console.log(`statusCode: ${res.statusCode}`)
+            res.on('data', (d) => {
+                console.log(JSON.parse(d));
+            })
+        })
+
+        req.on('error', (error) => {
+            console.error(error);
+        })
+
+        req.write(encryptedMessage);
+        req.end();
+    }, 5000);
+});
+```
 
 ### License
 
