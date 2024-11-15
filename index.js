@@ -218,7 +218,7 @@ const requestListener = (async (req, res) => {
 				break
 			case '/getMessage':
 				try {
-					let message = MESSAGE.getMessage(args[0]);
+					let message = await MESSAGE.getMessage(args[0]);
 					if (message) {
 						res.writeHead(200);
 						res.end(JSON.stringify(message));
@@ -326,32 +326,3 @@ if (param.scan !== undefined && param.scan === 'on') {
 	}, 1000);
 }
 
-
-/*
-const process = require('process');
-console.log('nzserver');
-console.log('just test');
-
-class nzserver {
-	test;
-
-	constructor() {
-		if (process.argv[0] != null && typeof process.argv[0] !== "undefined") console.log(process.argv[0]);
-		if (process.argv[1] != null && typeof process.argv[1] !== "undefined") console.log(process.argv[1]);
-		if (process.argv[2] != null && typeof process.argv[2] !== "undefined") console.log(process.argv[2]);
-		if (process.argv[3] != null && typeof process.argv[3] !== "undefined") console.log(process.argv[3]);
-		if (process.argv[4] != null && typeof process.argv[4] !== "undefined") console.log(process.argv[4]);
-		if (process.argv[5] != null && typeof process.argv[5] !== "undefined") console.log(process.argv[5]);
-		if (process.argv[6] != null && typeof process.argv[6] !== "undefined") console.log(process.argv[6]);
-		console.log('Hello NZ!!! =))');
-	}
-	
-	testMe() {
-		console.log('Ok');
-	}
-}
-
-const NZS = new nzserver(process);
-
-module.exports = nzserver;
-*/
