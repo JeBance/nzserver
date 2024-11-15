@@ -58,13 +58,21 @@ nzserver config="/home/user/somedir/" db="/home/user/somedir/DB/" net="ALPHA" ho
 ```
 
 Required parameters for server configuration:
+
 `config` - path to the directory where the `config.json` configuration file will be stored.
+
 `db` - path to the directory where the nosql database will be stored.
+
 `net` - name of the network of nodes. Nodes from "Alpha" network do not communicate with nodes from "Sigma" network.
+
 `host` - host that will listen to the server. For example, `192.168.1.10` or `http://domain.com`.
+
 `port` - port the server will listen to.
+
 `user` - name or nickname of the server administrator. Will be used to generate a PGP key.
+
 `mail` - email address of the server administrator. Will be used to generate a PGP key.
+
 `pass` - a strong passphrase for the PGP key.
 
 #### Starting a configured server
@@ -175,51 +183,51 @@ const PGP = new securePGPstorage();
 
 let host = config.host;
 let port = config.port;
-let jsonCommand = {	host: host, port: port };
+let jsonCommand = {    host: host, port: port };
 let encryptedMessage = '';
 let jsonReq = { handshake: '' };
 
 const encrypt = new Promise((resolve, reject) => {
-	try{
-		(async () => {
-			await PGP.decryptStorage(config.secureKey, config.passphrase)
-			encryptedMessage = await PGP.encryptMessage(JSON.stringify(jsonCommand), PGP.publicKeyArmored, true);
-			jsonReq.handshake = encryptedMessage;
-			console.log(JSON.stringify(jsonReq));
-			resolve(true);
-		})();
-	} catch(e) {
-		console.log(e);
-	}
+    try{
+        (async () => {
+            await PGP.decryptStorage(config.secureKey, config.passphrase)
+            encryptedMessage = await PGP.encryptMessage(JSON.stringify(jsonCommand), PGP.publicKeyArmored, true);
+            jsonReq.handshake = encryptedMessage;
+            console.log(JSON.stringify(jsonReq));
+            resolve(true);
+        })();
+    } catch(e) {
+        console.log(e);
+    }
 });
 
 encrypt.then((value) => {
-	console.log('\nSending request...');
+    console.log('\nSending request...');
 
-	let options = {
-		host: config.host,
-		port: config.port,
-		path: '/',
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'Content-Length': (JSON.stringify(jsonReq)).length
-		}
-	};
+    let options = {
+        host: config.host,
+        port: config.port,
+        path: '/',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': (JSON.stringify(jsonReq)).length
+        }
+    };
 
-	const req = http.request(options, (res) => {
-		console.log(`statusCode: ${res.statusCode}`)
-		res.on('data', (d) => {
-			console.log(JSON.parse(d));
-		})
-	})
+    const req = http.request(options, (res) => {
+        console.log(`statusCode: ${res.statusCode}`)
+        res.on('data', (d) => {
+            console.log(JSON.parse(d));
+        })
+    })
 
-	req.on('error', (error) => {
-		console.error(error);
-	})
+    req.on('error', (error) => {
+        console.error(error);
+    })
 
-	req.write(JSON.stringify(jsonReq));
-	req.end();
+    req.write(JSON.stringify(jsonReq));
+    req.end();
 });
 ```
 
@@ -238,56 +246,56 @@ const PGP = new securePGPstorage();
 let host = config.host;
 let port = config.port;
 let jsonCommand = {
-	hash: '23ea0c83aebcd6f19d5cd11d1e5857e8',
-	timestamp: 1731684000961,
-	message: '-----BEGIN PGP MESSAGE----- ... -----END PGP MESSAGE-----\n'
+    hash: '23ea0c83aebcd6f19d5cd11d1e5857e8',
+    timestamp: 1731684000961,
+    message: '-----BEGIN PGP MESSAGE----- ... -----END PGP MESSAGE-----\n'
 };
 let encryptedMessage = '';
 let jsonReq = { newMessage: '' };
 
 const encrypt = new Promise((resolve, reject) => {
-	try{
-		(async () => {
-			await PGP.decryptStorage(config.secureKey, config.passphrase)
-			encryptedMessage = await PGP.encryptMessage(JSON.stringify(jsonCommand), PGP.publicKeyArmored, true);
-			jsonReq.handshake = encryptedMessage;
-			console.log(JSON.stringify(jsonReq));
-			resolve(true);
-		})();
-	} catch(e) {
-		console.log(e);
-	}
+    try{
+        (async () => {
+            await PGP.decryptStorage(config.secureKey, config.passphrase)
+            encryptedMessage = await PGP.encryptMessage(JSON.stringify(jsonCommand), PGP.publicKeyArmored, true);
+            jsonReq.handshake = encryptedMessage;
+            console.log(JSON.stringify(jsonReq));
+            resolve(true);
+        })();
+    } catch(e) {
+        console.log(e);
+    }
 });
 
 encrypt.then((value) => {
-	let messageSender = setInterval(async () => {
-		console.log('\nSending request...');
+    let messageSender = setInterval(async () => {
+        console.log('\nSending request...');
 
-		let options = {
-			host: config.host,
-			port: config.port,
-			path: '/',
-			method: 'POST',
-			headers: {
-				'Content-Type': 'text/html',
-				'Content-Length': encryptedMessage.length
-			}
-		};
+        let options = {
+            host: config.host,
+            port: config.port,
+            path: '/',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/html',
+                'Content-Length': encryptedMessage.length
+            }
+        };
 
-		const req = http.request(options, (res) => {
-			console.log(`statusCode: ${res.statusCode}`)
-			res.on('data', (d) => {
-				console.log(JSON.parse(d));
-			})
-		})
+        const req = http.request(options, (res) => {
+            console.log(`statusCode: ${res.statusCode}`)
+            res.on('data', (d) => {
+                console.log(JSON.parse(d));
+            })
+        })
 
-		req.on('error', (error) => {
-			console.error(error);
-		})
+        req.on('error', (error) => {
+            console.error(error);
+        })
 
-		req.write(encryptedMessage);
-		req.end();
-	}, 5000);
+        req.write(encryptedMessage);
+        req.end();
+    }, 5000);
 });
 ```
 
