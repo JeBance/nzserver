@@ -1,6 +1,6 @@
 {
   "name": "nzserver",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "main": "index.js",
   "bin": "index.js",
   "description": "Decentralized service for delivering encrypted messages",
@@ -32,7 +32,7 @@
     "nzcli": "^1.0.0",
     "nzfsdb": "^1.0.0",
     "nzfunc": "^1.0.2",
-    "nzmessage": "^1.0.1",
+    "nzmessage": "^1.0.2",
     "nznode": "^1.0.8",
     "secure-pgp-storage": "^1.1.1"
   }
