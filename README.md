@@ -88,6 +88,8 @@ nzserver config="/home/user/somedir/"
 
 `scan` - scanning the local network for other nodes with port `28262`. Use `scan="on"` to turn on.
 
+`update` - one-time update of messages from other nodes at startup. Use `update="on"` to enable.
+
 
 ### API
 

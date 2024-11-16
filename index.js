@@ -122,12 +122,7 @@ const requestListener = (async (req, res) => {
 
 			// newMessage
 			} else if ((req.hasOwnProperty('newMessage') === true)
-			&& (req.newMessage.hasOwnProperty('hash') === true)
-			&& (req.newMessage.hasOwnProperty('message') === true)
-			&& (req.newMessage.hasOwnProperty('timestamp') === true)
-			&& ((await DB.validateName(req.newMessage.hash)) === true)
-			&& (Number.isInteger(req.newMessage.timestamp))
-			&& (req.newMessage.hash === getHASH(req.newMessage.message, 'md5'))
+			&& (MESSAGE.checkMessageStructure(req.newMessage))
 			&& (MESSAGE.messages[req.newMessage.hash] === undefined)) {
 				try {
 					let currentTime = new Date().getTime();
@@ -324,5 +319,17 @@ if (param.scan !== undefined && param.scan === 'on') {
 	let searchingNodes = setInterval(async () => {
 		await NODE.searchingNodes();
 	}, 1000);
+}
+
+if (param.update !== undefined && param.update === 'on') {
+	console.log('Message update started');
+	(async () => {
+		let messages;
+		let keys = Object.keys(NODE.nodes);
+		for (let i = 0, l = keys.length; i < l; i++) {
+			messages = await NODE.getMessages(NODE.nodes[keys[i]]);
+			await MESSAGE.updateMessages(messages, NODE.nodes[keys[i]], NODE);
+		}
+	})();
 }
 
