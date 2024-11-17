@@ -7,7 +7,8 @@ const param = {
 	port: null,
 	user: null,
 	mail: null,
-	pass: null
+	pass: null,
+	autoDel: null
 };
 const process = require('process');
 const nzcli = require('nzcli');
@@ -20,7 +21,8 @@ const config = new letsconfig({
 	host: param.host,
 	port: param.port,
 	passphrase: param.pass,
-	secureKey: null
+	secureKey: null,
+	autoDel: Number(param.autoDel)
 }, param.config, 'config.json');
 
 const nzfsdb = require('nzfsdb');
@@ -132,7 +134,7 @@ const requestListener = (async (req, res) => {
 					});
 					let inequal = currentTime - (infoNode.time + infoNode.ping);
 					if (((await PGP.checkMessage(req.newMessage.message)) === true)
-					&& (req.newMessage.timestamp > (currentTime - 900000))
+					&& (!MESSAGE.hasExpired(req.newMessage.timestamp))
 					&& ((req.newMessage.timestamp + inequal) < currentTime)) {
 						await MESSAGE.add({
 							hash: req.newMessage.hash,
@@ -297,17 +299,19 @@ checkingKeychain
 
 
 
-let checkingMessages = setInterval(async () => {
-	let currentTime = new Date().getTime();
-	let keys = Object.keys(MESSAGE.messages);
-	for (let i = 0, l = keys.length; i < l; i++) {
-		if (MESSAGE.messages[keys[i]] < (currentTime - 900000)) {	// 15 min
-			// deleting old messages
-			await MESSAGE.remove(keys[i]);
+if (param.autoDel !== undefined) config.autoDel = Number(param.autoDel);
+if (config.autoDel !== null) {
+	console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
+	let checkingMessages = setInterval(async () => {
+		let currentTime = new Date().getTime();
+		let keys = Object.keys(MESSAGE.messages);
+		for (let i = 0, l = keys.length; i < l; i++) {
+			if (MESSAGE.hasExpired(MESSAGE.messages[keys[i]])) {
+				await MESSAGE.remove(keys[i]);
+			}
 		}
-	}
-}, 10000);
-
+	}, 1000);
+}
 
 
 let checkingNodes = setInterval(async () => {

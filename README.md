@@ -90,6 +90,8 @@ nzserver config="/home/user/somedir/"
 
 `update` - one-time update of messages from other nodes at startup. Use `update="on"` to enable.
 
+`autoDel` - automatically delete messages after a specified time in minutes. Use `autoDel="15"` to set the time parameter. Autodelete is disabled by default.
+
 
 ### API
 
