@@ -290,7 +290,7 @@ checkingKeychain
 
 
 if (param.autoDel !== undefined) config.autoDel = Number(param.autoDel);
-if (config.autoDel !== null) {
+if (config.autoDel !== null && config.autoDel !== 0) {
 	console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
 	let checkingMessages = setInterval(async () => {
 		let currentTime = new Date().getTime();
