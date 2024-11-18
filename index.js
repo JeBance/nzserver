@@ -130,7 +130,7 @@ const requestListener = (async (req, res) => {
 				try {
 					let { decrypted, result } = await NODE.senderCommandVerification(req.newMessage);
 					if (!result) throw new Error();
-					req.newMessage = decrypted.data
+					req.newMessage = JSON.parse(decrypted.data);
 					if (!MESSAGE.checkMessageStructure(req.newMessage)
 					|| MESSAGE.messages[req.newMessage.hash] !== undefined) throw new Error();
 					let currentTime = new Date().getTime();
