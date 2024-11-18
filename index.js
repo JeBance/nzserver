@@ -218,12 +218,9 @@ const requestListener = (async (req, res) => {
 			case '/getMessage':
 				try {
 					let message = await MESSAGE.getMessage(args[0]);
-					if (message) {
-						res.writeHead(200);
-						res.end(JSON.stringify(message));
-					} else {
-						throw new Error();
-					}
+					if (!message) throw new Error();
+					res.writeHead(200);
+					res.end(JSON.stringify(message));
 				} catch(e) {
 					res.writeHead(404);
 					res.end(JSON.stringify({error:'Resource not found'}));
