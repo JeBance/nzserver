@@ -143,15 +143,9 @@ const requestListener = (async (req, res) => {
 					|| (MESSAGE.hasExpired(req.newMessage.timestamp))
 					|| !((req.newMessage.timestamp + inequal) < currentTime)) throw new Error();
 					await MESSAGE.add(req.newMessage);
-					let command = JSON.stringify({
-						host: config.host,
-						port: config.port,
-						hash: req.newMessage.hash,
-						timestamp: req.newMessage.timestamp,
-						message: req.newMessage.message
-					});
-					let encrypted = await PGP.encryptMessage(command, PGP.publicKeyArmored, true);
-					await NODE.sendMessageToAll({ newMessage: encrypted });
+					req.newMessage.host = config.host;
+					req.newMessage.port = config.port;
+					await NODE.sendNewMessageToAll(req.newMessage);
 				} catch(e) {
 //					console.log(e);
 				}
@@ -171,10 +165,7 @@ const requestListener = (async (req, res) => {
 					message: data
 				};
 				await MESSAGE.add(message);
-				// create the command "newMessage"
-				let command = JSON.stringify(message);
-				let encrypted = await PGP.encryptMessage(command, PGP.publicKeyArmored, true);
-				await NODE.sendMessageToAll({ newMessage: encrypted });
+				await NODE.sendNewMessageToAll(message);
 			} catch(e) {
 //				console.log(e);
 			}

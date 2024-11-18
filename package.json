@@ -1,6 +1,6 @@
 {
   "name": "nzserver",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "main": "index.js",
   "bin": "index.js",
   "description": "Decentralized service for delivering encrypted messages",
