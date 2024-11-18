@@ -77,6 +77,9 @@ const requestListener = (async (req, res) => {
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
 				try {
+//					let { decrypted, result } = await NODE.senderCommandVerification(req.handshake);
+//					console.log(decrypted);
+//					console.log(result);
 					let decrypted = await PGP.decryptMessage(req.handshake);
 					if (decrypted) {
 						let senderKeyID, senderPublicKeyArmored;
@@ -123,58 +126,57 @@ const requestListener = (async (req, res) => {
 				}
 
 			// newMessage
-			} else if ((req.hasOwnProperty('newMessage') === true)
-			&& (MESSAGE.checkMessageStructure(req.newMessage))
-			&& (MESSAGE.messages[req.newMessage.hash] === undefined)) {
+			} else if (req.hasOwnProperty('newMessage') === true) {
 				try {
+					let { decrypted, result } = await NODE.senderCommandVerification(req.newMessage);
+					if (!result) throw new Error();
+					req.newMessage = decrypted.data
+					if (!MESSAGE.checkMessageStructure(req.newMessage)
+					|| MESSAGE.messages[req.newMessage.hash] !== undefined) throw new Error();
 					let currentTime = new Date().getTime();
 					let infoNode = await NODE.getInfo({
 						host: req.newMessage.host,
 						port: req.newMessage.port
 					});
 					let inequal = currentTime - (infoNode.time + infoNode.ping);
-					if (((await PGP.checkMessage(req.newMessage.message)) === true)
-					&& (!MESSAGE.hasExpired(req.newMessage.timestamp))
-					&& ((req.newMessage.timestamp + inequal) < currentTime)) {
-						await MESSAGE.add({
-							hash: req.newMessage.hash,
-							timestamp: req.newMessage.timestamp,
-							message: req.newMessage.message
-						});
-						await NODE.sendMessageToAll({
-							newMessage: {
-								host: config.host,
-								port: config.port,
-								hash: req.newMessage.hash,
-								timestamp: req.newMessage.timestamp,
-								message: req.newMessage.message
-							}
-						});
-					}
+					if (((await PGP.checkMessage(req.newMessage.message)) !== true)
+					|| (MESSAGE.hasExpired(req.newMessage.timestamp))
+					|| !((req.newMessage.timestamp + inequal) < currentTime)) throw new Error();
+					await MESSAGE.add(req.newMessage);
+					let command = JSON.stringify({
+						host: config.host,
+						port: config.port,
+						hash: req.newMessage.hash,
+						timestamp: req.newMessage.timestamp,
+						message: req.newMessage.message
+					});
+					let encrypted = await PGP.encryptMessage(command, PGP.publicKeyArmored, true);
+					await NODE.sendMessageToAll({ newMessage: encrypted });
 				} catch(e) {
 //					console.log(e);
 				}
 			}
 
 		// encrypted messages (just save and give)
-		} else if ((await PGP.checkMessage(data)) === true) {
+		} else if (await PGP.checkMessage(data)) {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
-			if (MESSAGE.messages[hash] === undefined) {
-				await MESSAGE.add({
+			try {
+				if (MESSAGE.messages[hash] !== undefined) throw new Error();
+				let message = {
+					host: config.host,
+					port: config.port,
 					hash: hash,
 					timestamp: nonce,
 					message: data
-				});
-				await NODE.sendMessageToAll({
-					newMessage: {
-						host: config.host,
-						port: config.port,
-						hash: hash,
-						timestamp: nonce,
-						message: data
-					}
-				});
+				};
+				await MESSAGE.add(message);
+				// create the command "newMessage"
+				let command = JSON.stringify(message);
+				let encrypted = await PGP.encryptMessage(command, PGP.publicKeyArmored, true);
+				await NODE.sendMessageToAll({ newMessage: encrypted });
+			} catch(e) {
+//				console.log(e);
 			}
 
 		} else {
