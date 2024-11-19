@@ -178,6 +178,7 @@ server.listen(config.port, config.host, () => {
 // check nodes
 setInterval(async () => {
 	await NODE.checkingNodes();
+	// function for synchronizing messages with other nodes
 	let messages = {};
 	let keys = Object.keys(NODE.nodes);
 	for (let i = 0, l = keys.length; i < l; i++) {
