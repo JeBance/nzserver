@@ -61,7 +61,7 @@ const requestListener = (async (req, res) => {
 			buffers.push(chunk);
 		}
 		const data = Buffer.concat(buffers).toString();
-		let hash = getHASH(data, 'md5');
+		let hash = await getHASH(data, 'md5');
 
 		// command messages (for interaction between nodes)
 		if (hasJsonStructure(data) === true) {
@@ -72,7 +72,7 @@ const requestListener = (async (req, res) => {
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
 				try {
-					let senderHash = getHASH(JSON.stringify(req.handshake), 'md5');
+					let senderHash = await getHASH(JSON.stringify(req.handshake), 'md5');
 					if (NODE.nodes[senderHash]) throw new Error();
 					if (req.handshake.net !== config.net) throw new Error();
 					let senderNodeInfo = await NODE.getInfo(req.handshake);
