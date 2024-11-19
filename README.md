@@ -4,22 +4,21 @@
 **Table of Contents**
 
 - [nzserver](#nzserver)
-    - [Getting started](#getting-started)
-        - [Node.js](#nodejs)
-        - [Configuring the server](#configuring-the-server)
-        - [Starting a configured server](#starting-a-configured-server)
-        - [Additional options when starting the server](#additional-options-when-starting-the-server)
-    - [API](#api)
-    - [GET requests](#get-requests)
-        - [info](#info)
-        - [getNodes](#getNodes)
-        - [getMessages](#getMessages)
-        - [getMessage](#getMessage)
-    - [POST requests](#post-requests)
-        - [handshake](#handshake)
-        - [newMessage](#newMessage)
-    - [Receiving messages from the client](#receiving-messages-from-the-client)
-    - [License](#license)
+	- [Getting started](#getting-started)
+		- [Node.js](#nodejs)
+		- [Configuring the server](#configuring-the-server)
+		- [Additional options when starting the server](#additional-options-when-starting-the-server)
+	- [API](#api)
+	- [GET requests](#get-requests)
+		- [info](#info)
+		- [getNodes](#getNodes)
+		- [getMessages](#getMessages)
+		- [getMessage](#getMessage)
+	- [POST requests](#post-requests)
+		- [handshake](#handshake)
+		- [newMessage](#newMessage)
+	- [Receiving messages from the client](#receiving-messages-from-the-client)
+	- [License](#license)
 
 ### nzserver
 
@@ -31,12 +30,21 @@
 
 * The server can be run on a separate network of nodes.
 
-* The `index.js` package works well in Node.js. It is used by default when you `nzserver config=/some/path/to/config/` in the terminal.
+* The `index.js` package works well in Node.js. It is used by default when you `nzserver listen="http://domain.com:port" net="ALPHA"` in the terminal.
 
 
 ### Getting started
 
 #### Node.js
+
+Install NodeJS 23.X:
+
+```sh
+sudo apt update && sudo apt upgrade
+curl -fsSL https://deb.nodesource.com/setup_23.x | sudo -E bash -
+sudo apt install nodejs
+node -v && npm -v
+```
 
 Install nzserver using npm:
 
@@ -52,43 +60,27 @@ npm update -g nzserver
 
 #### Configuring the server
 
-The first launch requires configuring the server. Use `key="value"` arguments to pass parameters.
+When starting the server, use the `key="value"` arguments to pass parameters.
 
 ```sh
-nzserver config="/home/user/somedir/" db="/home/user/somedir/DB/" net="ALPHA" host="192.168.1.10" port="28262" user="User Name" mail="username@somemail.com" pass="strongpassphrase"
+nzserver listen="http://domain.com:port" net="ALPHA"
+```
+
+or
+
+```sh
+nzserver listen="IP_address:port" net="ALPHA"
 ```
 
 Required parameters for server configuration:
 
-`config` - path to the directory where the `config.json` configuration file will be stored.
+`listen` - server address in the external network. For example, `192.168.1.10:28262` or `http://domain.com:16556`.
 
-`db` - path to the directory where the nosql database will be stored.
-
-`net` - name of the network of nodes. Nodes from "Alpha" network do not communicate with nodes from "Sigma" network.
-
-`host` - host that will listen to the server. For example, `192.168.1.10` or `http://domain.com`.
-
-`port` - port the server will listen to.
-
-`user` - name or nickname of the server administrator. Will be used to generate a PGP key.
-
-`mail` - email address of the server administrator. Will be used to generate a PGP key.
-
-`pass` - a strong passphrase for the PGP key.
-
-#### Starting a configured server
-
-After configuring the server, the server can be started with the required `config` parameter.
-
-```sh
-nzserver config="/home/user/somedir/"
-```
+`net` - name of the network of nodes. Nodes from "ALPHA" network do not communicate with nodes from "SIGMA" network.
 
 #### Additional options when starting the server
 
 `scan` - scanning the local network for other nodes with port `28262`. Use `scan="on"` to turn on.
-
-`update` - one-time update of messages from other nodes at startup. Use `update="on"` to enable.
 
 `autoDel` - automatically delete messages after a specified time in minutes. Use `autoDel="15"` to set the time parameter. Autodelete is disabled by default.
 
@@ -174,68 +166,48 @@ curl 192.168.1.10:28262/getMessage?23ea0c83aebcd6f19d5cd11d1e5857e8
 
 ### POST requests
 
-To perform a POST request, some information must be encrypted for the server with the recipient's public key. The encrypted message is signed with the sender's private key during encryption. The request method is specified and an encrypted message is assigned to it. Upon receiving the request, the server recognizes the request method and attempts to decrypt the message containing the command. If the server successfully decrypts the message and verifies the sender against its database of known nodes, the command will be accepted and executed.
 
 #### handshake
 
-`handshake` - is used to send your host and port in an encrypted message that is signed with your PGP private key.
+`handshake` - is used to send your host and port.
 
 ```js
 const http = require('http');
-const securePGPstorage = require('secure-pgp-storage');
-const letsconfig = require('letsconfig');
 
-const config = new letsconfig({}, '/home/user/path/to/config/');
-const PGP = new securePGPstorage();
+let jsonReq = {
+	handshake: {
+		net: 'ALPHA',
+		host: '192.168.1.10',
+		port: 28262
+	}
+};
 
-let host = config.host;
-let port = config.port;
-let jsonCommand = {    host: host, port: port };
-let encryptedMessage = '';
-let jsonReq = { handshake: '' };
+console.log('Sending request...');
 
-const encrypt = new Promise((resolve, reject) => {
-    try{
-        (async () => {
-            await PGP.decryptStorage(config.secureKey, config.passphrase)
-            encryptedMessage = await PGP.encryptMessage(JSON.stringify(jsonCommand), PGP.publicKeyArmored, true);
-            jsonReq.handshake = encryptedMessage;
-            console.log(JSON.stringify(jsonReq));
-            resolve(true);
-        })();
-    } catch(e) {
-        console.log(e);
-    }
-});
+let options = {
+	host: config.host,
+	port: config.port,
+	path: '/',
+	method: 'POST',
+	headers: {
+		'Content-Type': 'application/json',
+		'Content-Length': (JSON.stringify(jsonReq)).length
+	}
+};
 
-encrypt.then((value) => {
-    console.log('\nSending request...');
+const req = http.request(options, (res) => {
+	console.log(`statusCode: ${res.statusCode}`)
+	res.on('data', (d) => {
+		console.log(JSON.parse(d));
+	})
+})
 
-    let options = {
-        host: config.host,
-        port: config.port,
-        path: '/',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': (JSON.stringify(jsonReq)).length
-        }
-    };
+req.on('error', (error) => {
+	console.error(error);
+})
 
-    const req = http.request(options, (res) => {
-        console.log(`statusCode: ${res.statusCode}`)
-        res.on('data', (d) => {
-            console.log(JSON.parse(d));
-        })
-    })
-
-    req.on('error', (error) => {
-        console.error(error);
-    })
-
-    req.write(JSON.stringify(jsonReq));
-    req.end();
-});
+req.write(JSON.stringify(jsonReq));
+req.end();
 ```
 
 #### newMessage
@@ -244,66 +216,45 @@ encrypt.then((value) => {
 
 ```js
 const http = require('http');
-const securePGPstorage = require('secure-pgp-storage');
-const letsconfig = require('letsconfig');
 
-const config = new letsconfig({}, '/home/user/path/to/config/');
-const PGP = new securePGPstorage();
-
-let host = config.host;
-let port = config.port;
-let jsonCommand = {
-    hash: '23ea0c83aebcd6f19d5cd11d1e5857e8',
-    timestamp: 1731684000961,
-    message: '-----BEGIN PGP MESSAGE----- ... -----END PGP MESSAGE-----\n'
+let jsonReq = {
+	newMessage: {
+		host: '192.168.1.10',
+		port: 28262,
+		hash: '23ea0c83aebcd6f19d5cd11d1e5857e8',
+		timestamp: 1731684000961,
+		message: '-----BEGIN PGP MESSAGE----- ... -----END PGP MESSAGE-----\n'
+	}
 };
-let encryptedMessage = '';
-let jsonReq = { newMessage: '' };
 
-const encrypt = new Promise((resolve, reject) => {
-    try{
-        (async () => {
-            await PGP.decryptStorage(config.secureKey, config.passphrase)
-            encryptedMessage = await PGP.encryptMessage(JSON.stringify(jsonCommand), PGP.publicKeyArmored, true);
-            jsonReq.handshake = encryptedMessage;
-            console.log(JSON.stringify(jsonReq));
-            resolve(true);
-        })();
-    } catch(e) {
-        console.log(e);
-    }
-});
+let messageSender = setInterval(async () => {
+	console.log('\nSending request...');
 
-encrypt.then((value) => {
-    let messageSender = setInterval(async () => {
-        console.log('\nSending request...');
+	let options = {
+		host: config.host,
+		port: config.port,
+		path: '/',
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Content-Length': (JSON.stringify(jsonReq)).length
+		}
+	};
 
-        let options = {
-            host: config.host,
-            port: config.port,
-            path: '/',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/html',
-                'Content-Length': encryptedMessage.length
-            }
-        };
+	const req = http.request(options, (res) => {
+		console.log(`statusCode: ${res.statusCode}`)
+		res.on('data', (d) => {
+			console.log(JSON.parse(d));
+		})
+	})
 
-        const req = http.request(options, (res) => {
-            console.log(`statusCode: ${res.statusCode}`)
-            res.on('data', (d) => {
-                console.log(JSON.parse(d));
-            })
-        })
+	req.on('error', (error) => {
+		console.error(error);
+	})
 
-        req.on('error', (error) => {
-            console.error(error);
-        })
-
-        req.write(encryptedMessage);
-        req.end();
-    }, 5000);
-});
+	req.write(JSON.stringify(jsonReq));
+	req.end();
+}, 5000);
 ```
 
 
@@ -322,47 +273,47 @@ const PGP = new securePGPstorage();
 let encryptedMessage = '';
 
 const encrypt = new Promise((resolve, reject) => {
-    try{
-        (async () => {
-            await PGP.decryptStorage(config.secureKey, config.passphrase)
-            encryptedMessage = await PGP.encryptMessage('Hello world!', PGP.publicKeyArmored, true);
-            console.log(encryptedMessage);
-            resolve(true);
-        })();
-    } catch(e) {
-        console.log(e);
-    }
+	try{
+		(async () => {
+			await PGP.decryptStorage(config.secureKey, config.passphrase)
+			encryptedMessage = await PGP.encryptMessage('Hello world!', PGP.publicKeyArmored, true);
+			console.log(encryptedMessage);
+			resolve(true);
+		})();
+	} catch(e) {
+		console.log(e);
+	}
 });
 
 encrypt.then((value) => {
-    let messageSender = setInterval(async () => {
-        console.log('\nSending request...');
+	let messageSender = setInterval(async () => {
+		console.log('\nSending request...');
 
-        let options = {
-            host: config.host,
-            port: config.port,
-            path: '/',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/html',
-                'Content-Length': encryptedMessage.length
-            }
-        };
+		let options = {
+			host: config.host,
+			port: config.port,
+			path: '/',
+			method: 'POST',
+			headers: {
+				'Content-Type': 'text/html',
+				'Content-Length': encryptedMessage.length
+			}
+		};
 
-        const req = http.request(options, (res) => {
-            console.log(`statusCode: ${res.statusCode}`)
-            res.on('data', (d) => {
-                console.log(JSON.parse(d));
-            })
-        })
+		const req = http.request(options, (res) => {
+			console.log(`statusCode: ${res.statusCode}`)
+			res.on('data', (d) => {
+				console.log(JSON.parse(d));
+			})
+		})
 
-        req.on('error', (error) => {
-            console.error(error);
-        })
+		req.on('error', (error) => {
+			console.error(error);
+		})
 
-        req.write(encryptedMessage);
-        req.end();
-    }, 5000);
+		req.write(encryptedMessage);
+		req.end();
+	}, 5000);
 });
 ```
 

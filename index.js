@@ -184,7 +184,7 @@ server.listen(config.port, config.host, () => {
 			let keys = Object.keys(list);
 			for (let i = 0, l = keys.length; i < l; i++) {
 				await NODE.add({
-					keyID: list[keys[i]],
+					keyID: keys[i],
 					net: list[keys[i]].net,
 					host: list[keys[i]].host,
 					port: list[keys[i]].port,
