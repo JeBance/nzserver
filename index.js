@@ -1,33 +1,33 @@
 #!/usr/bin/env node
-const param = {
-	config: null,
-	db: null,
+const config = {
+	listen: null,
 	net: null,
 	host: null,
 	port: null,
-	user: null,
-	mail: null,
-	pass: null,
 	autoDel: null
 };
 const process = require('process');
 const nzcli = require('nzcli');
-const cli = new nzcli(param, process);
+const cli = new nzcli(config, process);
 
-const letsconfig = require('letsconfig');
-const config = new letsconfig({
-	DB: param.db,
-	net: param.net,
-	host: param.host,
-	port: param.port,
-	passphrase: param.pass,
-	secureKey: null,
-	autoDel: Number(param.autoDel)
-}, param.config, 'config.json');
+if (!config.listen) {
+	console.error('The required parameter "listen" is missing.');
+	process.exit(1);
+}
 
-const nzfsdb = require('nzfsdb');
-const DB = new nzfsdb(config.DB);
-if (!DB.checkExists()) process.exit(1);
+if (!config.net) {
+	console.error('The required parameter "net" is missing.');
+	process.exit(1);
+}
+
+const listen = config.listen.split(':');
+if (listen[0] && listen[1]) {
+	config.host = listen[0];
+	config.port = listen[1];
+} else {
+	console.error('The required "listen" parameter must be of the form "host:port". For example, "192.168.0.10:28262" or "https://domain.com:28262".');
+	process.exit(1);
+}
 
 const http = require('http');
 const URL = require('url');
@@ -42,18 +42,16 @@ const { getHASH,
 		doRequest,
 		getResponse } = require('nzfunc');
 
-process.stdout.write('\x1Bc');
+const nznode = require('nznode');
+let NODE = new nznode(config);
+
+const nzmessage = require('nzmessage');
+let MESSAGE = new nzmessage(config);
+
+//process.stdout.write('\x1Bc');
 console.log('\x1b[7m%s\x1b[0m', 'nzserver');
 console.log(process.platform + '/' + process.arch);
 console.log('pid ' + process.ppid);
-
-const nznode = require('nznode');
-let NODE = new nznode(config, DB, PGP);
-
-const nzmessage = require('nzmessage');
-let MESSAGE = new nzmessage(config, DB);
-
-
 
 const requestListener = (async (req, res) => {
 	let nonce = new Date().getTime();
@@ -77,50 +75,18 @@ const requestListener = (async (req, res) => {
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
 				try {
-//					let { decrypted, result } = await NODE.senderCommandVerification(req.handshake);
-//					console.log(decrypted);
-//					console.log(result);
-					let decrypted = await PGP.decryptMessage(req.handshake);
-					if (decrypted) {
-						let senderKeyID, senderPublicKeyArmored;
-						senderKeyID = decrypted.signatures[0].keyID.toHex();
-						if (NODE.nodes[senderKeyID]) {
-							senderPublicKeyArmored = await DB.read('nodes', senderKeyID);
-							decrypted = await PGP.decryptMessage(req.handshake, senderPublicKeyArmored);
-							await decrypted.signatures[0].verified; // throws on invalid signature
-						}
-						// update node key
-						if (hasJsonStructure(decrypted.data) === true) {
-							decrypted = JSON.parse(decrypted.data);
-							if ((decrypted.hasOwnProperty('host') === true)
-							&& (decrypted.hasOwnProperty('port') === true)) {
-								let info = await NODE.getInfo({
-									host: decrypted.host,
-									port: decrypted.port
-								});
-								if (info.publicKey) {
-									let key = await PGP.readKey(info.publicKey);
-									if (key) {
-										newSenderKeyID = key.getKeyID().toHex();
-										if (((NODE.nodes[senderKeyID]) && (senderKeyID !== newSenderKeyID))
-										|| (!NODE.nodes[senderKeyID])) {
-											await NODE.add({
-												keyID: newSenderKeyID,
-												host: decrypted.host,
-												port: decrypted.port,
-												ping: info.ping,
-												publicKey: info.publicKey
-											});
-										}
-										if ((NODE.nodes[senderKeyID])
-										&& (senderKeyID !== newSenderKeyID)) {
-											await NODE.remove(senderKeyID);
-										}
-									}
-								}
-							}
-						}
-					}
+					let senderHash = getHASH(JSON.stringify(req.handshake), 'md5');
+					if (NODE.nodes[senderHash]) throw new Error();
+					if (!req.handshake.hasOwnProperty('net')) throw new Error();
+					if (req.handshake.net !== config.net) throw new Error();
+					if (!req.handshake.hasOwnProperty('host')) throw new Error();
+					if (!req.handshake.hasOwnProperty('port')) throw new Error();
+					await NODE.add({
+						keyID: senderHash,
+						net: req.handshake.net,
+						host: req.handshake.host,
+						port: req.handshake.port
+					});
 				} catch(e) {
 //					console.log(e);
 				}
@@ -128,11 +94,8 @@ const requestListener = (async (req, res) => {
 			// newMessage
 			} else if (req.hasOwnProperty('newMessage') === true) {
 				try {
-					let { decrypted, result } = await NODE.senderCommandVerification(req.newMessage);
-					if (!result) throw new Error();
-					req.newMessage = JSON.parse(decrypted.data);
 					if (!MESSAGE.checkMessageStructure(req.newMessage)
-					|| MESSAGE.messages[req.newMessage.hash] !== undefined) throw new Error();
+					|| MESSAGE.list[req.newMessage.hash] !== undefined) throw new Error();
 					let currentTime = new Date().getTime();
 					let infoNode = await NODE.getInfo({
 						host: req.newMessage.host,
@@ -145,7 +108,7 @@ const requestListener = (async (req, res) => {
 					await MESSAGE.add(req.newMessage);
 					req.newMessage.host = config.host;
 					req.newMessage.port = config.port;
-					await NODE.sendNewMessageToAll(req.newMessage);
+					await NODE.sendMessageToAll({ newMessage: req.newMessage });
 				} catch(e) {
 //					console.log(e);
 				}
@@ -156,7 +119,7 @@ const requestListener = (async (req, res) => {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
 			try {
-				if (MESSAGE.messages[hash] !== undefined) throw new Error();
+				if (MESSAGE.list[hash] !== undefined) throw new Error();
 				let message = {
 					host: config.host,
 					port: config.port,
@@ -165,7 +128,7 @@ const requestListener = (async (req, res) => {
 					message: data
 				};
 				await MESSAGE.add(message);
-				await NODE.sendNewMessageToAll(message);
+				await NODE.sendMessageToAll({ newMessage: message });
 			} catch(e) {
 //				console.log(e);
 			}
@@ -204,11 +167,11 @@ const requestListener = (async (req, res) => {
 				break
 			case '/getMessages':
 				res.writeHead(200);
-				res.end(JSON.stringify(MESSAGE.messages));
+				res.end(JSON.stringify(MESSAGE.list));
 				break
 			case '/getMessage':
 				try {
-					let message = await MESSAGE.getMessage(args[0]);
+					let message = MESSAGE.getMessage(args[0]);
 					if (!message) throw new Error();
 					res.writeHead(200);
 					res.end(JSON.stringify(message));
@@ -229,75 +192,21 @@ const requestListener = (async (req, res) => {
 
 
 const server = http.createServer(requestListener);
-
-
-
-const checkingKeychain = new Promise((resolve, reject) => {
-	// when you generate keychain
-	// if you see:
-	// error:25066067:DSO support routines:dlfcn_load:could not load the shared library
-	// then run:
-	// export OPENSSL_CONF=/dev/null
-	try {
-		(async () => {
-			if ((param.user != null && typeof param.user !== "undefined")
-			|| (param.mail != null && typeof param.mail !== "undefined")
-			|| (param.pass != null && typeof param.pass !== "undefined")) {
-				console.log('Generate keychain...');
-
-				(async () => {
-					await PGP.createStorage(param.user, param.mail, param.pass);
-					console.log('publicKey generated successfully ✔️');
-					console.log('privateKey generated successfully ✔️');
-					config.passphrase = param.pass;
-					let encryptedStorage = await PGP.encryptStorage();
-					config.secureKey = encryptedStorage;
-					config.writeConfigFile();
-					console.log('Keychain saved successfully ✔️');
-					resolve(true);
-				})();
-
-			} else {
-
-				console.log('Checking keychain...')
-				if ((await PGP.checkMessage(config.secureKey))
-				&& (await PGP.decryptStorage(config.secureKey, config.passphrase))) {
-					console.log('Keychain available ✔️');
-					resolve(true);
-				} else {
-					console.log('\x1b[1m%s\x1b[0m', 'Missing keychain ❌');
-					console.error('\x1b[1m%s\x1b[0m', 'Run the server with the DB, Host, Port, Nickname, Email and Passphrase parameters. For example: ` nzserver config db="/home/Username/DB/" host="http://mydomain.com" port="28262" user="User Name" mail="myemail@somemail.com" pass="1q2w3e" `.');
-					process.exit(1);
-				}
-
-			}
-		})();
-	} catch(e) {
-		console.error('\x1b[1m%s\x1b[0m', `Failed to create keychain: ${e}`);
-		process.exit(1);
-	}
+server.listen(config.port, config.host, () => {
+	console.log('\x1b[7m%s\x1b[0m', `Server is running on http://${config.host}:${config.port}`);
 });
 
 
 
-checkingKeychain
-	.then((value) => {
-		server.listen(config.port, config.host, () => {
-			console.log('\x1b[7m%s\x1b[0m', `Server is running on http://${config.host}:${config.port}`);
-		});
-	})
-
-
-
-if (param.autoDel !== undefined) config.autoDel = Number(param.autoDel);
+if (config.autoDel !== undefined) config.autoDel = Number(config.autoDel);
 if (config.autoDel !== null && config.autoDel !== 0) {
 	console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
 	let checkingMessages = setInterval(async () => {
 		let currentTime = new Date().getTime();
-		let keys = Object.keys(MESSAGE.messages);
+		let keys = Object.keys(MESSAGE.list);
 		for (let i = 0, l = keys.length; i < l; i++) {
-			if (MESSAGE.hasExpired(MESSAGE.messages[keys[i]])) {
-				await MESSAGE.remove(keys[i]);
+			if (MESSAGE.hasExpired(MESSAGE.list[keys[i]])) {
+				MESSAGE.remove(keys[i]);
 			}
 		}
 	}, 1000);
@@ -308,22 +217,21 @@ let checkingNodes = setInterval(async () => {
 	await NODE.checkingNodes();
 }, 10000);
 
-if (param.scan !== undefined && param.scan === 'on') {
-	console.log('Network scan started');
+if (config.scan !== undefined && config.scan === 'on') {
+	console.log('Local network scan started');
 	let searchingNodes = setInterval(async () => {
 		await NODE.searchingNodes();
 	}, 1000);
 }
 
-if (param.update !== undefined && param.update === 'on') {
+(async () => {
 	console.log('Message update started');
-	(async () => {
-		let messages;
-		let keys = Object.keys(NODE.nodes);
-		for (let i = 0, l = keys.length; i < l; i++) {
-			messages = await NODE.getMessages(NODE.nodes[keys[i]]);
-			await MESSAGE.updateMessages(messages, NODE.nodes[keys[i]], NODE);
-		}
-	})();
-}
+	let messages = {};
+	let keys = Object.keys(NODE.nodes);
+	for (let i = 0, l = keys.length; i < l; i++) {
+		messages = await NODE.getMessages(NODE.nodes[keys[i]]);
+		await MESSAGE.updateMessages(messages, NODE.nodes[keys[i]], NODE);
+	}
+})();
+
 
