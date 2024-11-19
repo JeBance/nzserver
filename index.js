@@ -194,17 +194,18 @@ if (config.scan !== undefined && config.scan === 'on') {
 }
 
 // auto delete message function
-if (config.autoDel !== undefined) config.autoDel = Number(config.autoDel);
-if (config.autoDel !== null && config.autoDel !== 0) {
-	console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
-	let checkingMessages = setInterval(async () => {
-		let currentTime = new Date().getTime();
-		let keys = Object.keys(MESSAGE.list);
-		for (let i = 0, l = keys.length; i < l; i++) {
-			if (MESSAGE.hasExpired(MESSAGE.list[keys[i]])) {
-				MESSAGE.remove(keys[i]);
+if (config.autoDel !== undefined) {
+	config.autoDel = Number(config.autoDel);
+	if (config.autoDel !== null && config.autoDel > 0) {
+		console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
+		let checkingMessages = setInterval(async () => {
+			let currentTime = new Date().getTime();
+			let keys = Object.keys(MESSAGE.list);
+			for (let i = 0, l = keys.length; i < l; i++) {
+				if (MESSAGE.hasExpired(MESSAGE.list[keys[i]])) {
+					MESSAGE.remove(keys[i]);
+				}
 			}
-		}
-	}, 1000);
+		}, 1000);
+	}
 }
-
