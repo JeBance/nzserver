@@ -74,15 +74,16 @@ const requestListener = (async (req, res) => {
 				try {
 					let senderHash = getHASH(JSON.stringify(req.handshake), 'md5');
 					if (NODE.nodes[senderHash]) throw new Error();
-					if (!req.handshake.hasOwnProperty('net')) throw new Error();
 					if (req.handshake.net !== config.net) throw new Error();
-					if (!req.handshake.hasOwnProperty('host')) throw new Error();
-					if (!req.handshake.hasOwnProperty('port')) throw new Error();
+					let senderNodeInfo = await NODE.getInfo(req.handshake);
+					if (!senderNodeInfo) throw new Error();
+					if (req.handshake.net !== senderNodeInfo.net) throw new Error();
 					await NODE.add({
 						keyID: senderHash,
 						net: req.handshake.net,
 						host: req.handshake.host,
-						port: req.handshake.port
+						port: req.handshake.port,
+						ping: senderNodeInfo.ping
 					});
 				} catch(e) {
 //					console.log(e);
