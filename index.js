@@ -30,15 +30,12 @@ if (listen[0] && listen[1]) {
 }
 
 const http = require('http');
-const URL = require('url');
 
 const securePGPstorage = require('secure-pgp-storage');
 const PGP = new securePGPstorage();
 
 const { getHASH,
 		hasJsonStructure,
-		isUrlValid,
-		isIPv4withTCPportValid,
 		doRequest,
 		getResponse } = require('nzfunc');
 
@@ -212,16 +209,13 @@ if (config.autoDel !== null && config.autoDel !== 0) {
 	}, 1000);
 }
 
-
 let checkingNodes = setInterval(async () => {
 	await NODE.checkingNodes();
-}, 10000);
+}, 5000);
 
 if (config.scan !== undefined && config.scan === 'on') {
 	console.log('Local network scan started');
-	let searchingNodes = setInterval(async () => {
-		await NODE.searchingNodes();
-	}, 1000);
+	NODE.searchingNodes();
 }
 
 (async () => {
@@ -233,5 +227,4 @@ if (config.scan !== undefined && config.scan === 'on') {
 		await MESSAGE.updateMessages(messages, NODE.nodes[keys[i]], NODE);
 	}
 })();
-
 
