@@ -1,6 +1,6 @@
 {
   "name": "nzserver",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "index.js",
   "bin": "index.js",
   "description": "Decentralized service for delivering encrypted messages",
@@ -28,12 +28,10 @@
     "bin"
   ],
   "dependencies": {
-    "letsconfig": "^1.0.3",
     "nzcli": "^1.0.6",
-    "nzfsdb": "^1.0.0",
     "nzfunc": "^1.0.2",
-    "nzmessage": "^1.1.0",
-    "nznode": "^1.1.2",
-    "secure-pgp-storage": "^1.1.1"
+    "nzmessage": "^1.1.2",
+    "nznode": "^1.1.3",
+    "openpgp": "^6.0.0"
   }
 }
