@@ -175,6 +175,30 @@ server.listen(config.port, config.host, () => {
 	console.log('\x1b[7m%s\x1b[0m', `Server is running on http://${config.host}:${config.port}`);
 });
 
+// first node search
+(async () => {
+	try {
+		let response = await fetch('https://raw.githubusercontent.com/JeBance/nzserver/refs/heads/gh-pages/hosts.json');
+		if (response.ok) {
+			let list = await response.json();
+			let keys = Object.keys(list);
+			for (let i = 0, l = keys.length; i < l; i++) {
+				await NODE.add({
+					keyID: list[keys[i]],
+					net: list[keys[i]].net,
+					host: list[keys[i]].host,
+					port: list[keys[i]].port,
+					ping: 10
+				});
+			}
+		} else {
+			console.log(response.status);
+		}
+	} catch(e) {
+		console.log(e);
+	}
+})();
+
 // check nodes
 setInterval(async () => {
 	await NODE.checkingNodes();
