@@ -3,12 +3,12 @@ const config = {};
 const process = require('process');
 const nzcli = require('nzcli');
 const { getHASH,
+		hasPGPstructure,
 		hasJsonStructure,
 		doRequest,
 		getResponse } = require('nzfunc');
 const nzmessage = require('nzmessage');
 const nznode = require('nznode');
-const openpgp = require('openpgp');
 const cli = new nzcli(config, process);
 
 try {
@@ -81,7 +81,7 @@ const requestListener = (async (req, res) => {
 						port: req.newMessage.port
 					});
 					let inequal = currentTime - (infoNode.time + infoNode.ping);
-					if (!(await openpgp.readMessage({ armoredMessage: req.newMessage.message }))
+					if (!hasPGPstructure(req.newMessage.message)
 					|| (MESSAGE.hasExpired(req.newMessage.timestamp))
 					|| !((req.newMessage.timestamp + inequal) < currentTime)) throw new Error();
 					await MESSAGE.add(req.newMessage);
@@ -94,8 +94,7 @@ const requestListener = (async (req, res) => {
 			}
 
 		// encrypted messages (just save and give)
-		} else if (await openpgp.readMessage({ armoredMessage: data })) {
-					
+		} else if (hasPGPstructure(data)) {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
 			try {
@@ -209,7 +208,7 @@ setInterval(async () => {
 		messages = await NODE.getMessages(NODE.nodes[keys[i]]);
 		await MESSAGE.updateMessages(messages, NODE.nodes[keys[i]], NODE);
 	}
-}, 5000);
+}, 1000);
 
 // search nodes in local network
 if (config.scan !== undefined && config.scan === 'on') {
