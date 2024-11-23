@@ -1,8 +1,10 @@
 {
   "name": "nzserver",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "main": "index.js",
-  "bin": "index.js",
+  "bin": {
+    "nzserver": "index.js"
+  },
   "description": "Decentralized service for delivering encrypted messages",
   "keywords": [
     "nz",
@@ -17,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/JeBance/nzserver.git"
+    "url": "git+https://github.com/JeBance/nzserver.git"
   },
   "license": "LGPL-3.0+",
   "bugs": {

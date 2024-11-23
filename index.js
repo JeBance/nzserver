@@ -2,6 +2,7 @@
 const config = {};
 const process = require('process');
 const nzcli = require('nzcli');
+const fs = require('fs');
 const { getHASH,
 		hasPGPstructure,
 		hasJsonStructure,
@@ -11,13 +12,20 @@ const nzmessage = require('nzmessage');
 const nznode = require('nznode');
 const cli = new nzcli(config, process);
 
+let listen;
 try {
 	if (!config.listen) throw new Error('The required parameter "listen" is missing.');
 	if (!config.net) throw new Error('The required parameter "net" is missing.');
-	const listen = config.listen.split(':');
+	listen = config.listen.split(':');
 	if (!listen[0] || !listen[1]) throw new Error('The required "listen" parameter must be of the form "host:port". For example, "192.168.0.10:28262" or "https://domain.com:28262".');
-	config.host = listen[0];
-	config.port = listen[1];
+	if (listen[0] === 'http' || listen[0] === 'https') {
+		const { port, hostname } = new URL(config.listen);
+		config.host = hostname;
+		config.port = port;
+	} else {
+		config.host = listen[0];
+		config.port = listen[1] || '28262';
+	}
 } catch(e) {
 	console.error(e);
 	process.exit(1);
@@ -26,7 +34,7 @@ try {
 let NODE = new nznode(config);
 let MESSAGE = new nzmessage(config);
 
-process.stdout.write('\x1Bc');
+//process.stdout.write('\x1Bc');
 console.log('\x1b[7m%s\x1b[0m', 'nzserver');
 console.log(process.platform + '/' + process.arch);
 console.log('pid ' + process.ppid);
@@ -132,6 +140,8 @@ const requestListener = (async (req, res) => {
 		}
 
 		switch (url[0]) {
+			case '/':
+			case '/index.html':
 			case '/info':
 				let info = JSON.stringify({
 					net: config.net,
@@ -171,12 +181,26 @@ const requestListener = (async (req, res) => {
 });
 
 
-// create server
+
 const http = require('http');
-const server = http.createServer(requestListener);
-server.listen(config.port, config.host, () => {
-	console.log('\x1b[7m%s\x1b[0m', `Server is running on http://${config.host}:${config.port}`);
-});
+const https = require('https');
+if (listen[0] === 'https' && config.key && config.cert) {
+	const options = {
+		key: fs.readFileSync(config.key),	// private-key.pem (or privkey.pem for certbot)
+		cert: fs.readFileSync(config.cert)	// certificate.pem (or fullchain.pem for certbot)
+	};
+	// create server
+	https.createServer(options, requestListener).listen(config.port, config.host, () => {
+		console.log('\x1b[7m%s\x1b[0m', `Server is running on https://${config.host}:${config.port}`);
+	});
+} else {
+	// create server
+	http.createServer(requestListener).listen(config.port, config.host, () => {
+		console.log('\x1b[7m%s\x1b[0m', `Server is running on http://${config.host}:${config.port}`);
+	});
+}
+
+
 
 // first node search
 (async () => {

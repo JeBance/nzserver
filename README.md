@@ -84,6 +84,10 @@ Required parameters for server configuration:
 
 `autoDel` - automatically delete messages after a specified time in minutes. Use `autoDel="15"` to set the time parameter. Autodelete is disabled by default.
 
+`key` - is the absolute path to the private key file. For example, `/test/keys/privkey.pem`.
+
+`cert` - is the absolute path to the certificate file. For example, `/test/keys/fullchain.pem`.
+
 
 ### API
 
