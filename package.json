@@ -1,6 +1,6 @@
 {
   "name": "nzserver",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "main": "index.js",
   "bin": "index.js",
   "description": "Decentralized service for delivering encrypted messages",
@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "nzcli": "^1.0.6",
-    "nzfunc": "^1.0.4",
+    "nzfunc": "^1.0.5",
     "nzmessage": "^1.1.3",
     "nznode": "^1.1.5"
   }

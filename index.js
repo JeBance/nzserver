@@ -96,7 +96,11 @@ const requestListener = (async (req, res) => {
 		// encrypted messages (just save and give)
 		} else if (hasPGPstructure(data)) {
 			res.writeHead(200);
-			res.end(JSON.stringify({result:'Data successfully received'}));
+			res.end(JSON.stringify({
+				result: 'Data successfully received',
+				hash: hash,
+				timestamp: nonce
+			}));
 			try {
 				if (MESSAGE.list[hash] !== undefined) throw new Error();
 				let message = {
