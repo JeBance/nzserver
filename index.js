@@ -5,24 +5,23 @@ const nzcli = require('nzcli');
 const fs = require('fs');
 const { getHASH,
 		hasPGPstructure,
-		hasJsonStructure,
-		doRequest,
-		getResponse } = require('nzfunc');
+		hasJsonStructure } = require('nzfunc');
 const nzmessage = require('nzmessage');
 const nznode = require('nznode');
 const cli = new nzcli(config, process);
 
-let listen;
 try {
 	if (!config.listen) throw new Error('The required parameter "listen" is missing.');
 	if (!config.net) throw new Error('The required parameter "net" is missing.');
-	listen = config.listen.split(':');
+	let listen = config.listen.split(':');
 	if (!listen[0] || !listen[1]) throw new Error('The required "listen" parameter must be of the form "host:port". For example, "192.168.0.10:28262" or "https://domain.com:28262".');
 	if (listen[0] === 'http' || listen[0] === 'https') {
 		const { port, hostname } = new URL(config.listen);
+		config.prot = listen[0];
 		config.host = hostname;
-		config.port = port;
+		config.port = port || '28262';
 	} else {
+		config.prot = 'http';
 		config.host = listen[0];
 		config.port = listen[1] || '28262';
 	}
@@ -57,15 +56,16 @@ const requestListener = (async (req, res) => {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
 			req = JSON.parse(data);
+			console.log(req);
 
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
 				try {
 					let senderHash = await getHASH(JSON.stringify(req.handshake), 'md5');
-					if (NODE.nodes[senderHash]) throw new Error();
-					if (req.handshake.net !== config.net) throw new Error();
+					if (NODE.nodes[senderHash]) throw new Error('The node is already in the list of known nodes.');
+					if (req.handshake.net !== config.net) throw new Error('The node does not match the selected network.');
 					let senderNodeInfo = await NODE.getInfo(req.handshake);
-					if (!senderNodeInfo) throw new Error();
+					if (!senderNodeInfo) throw new Error('Failed to get information from node ' + req.handshake.host + ':' + req.handshake.port);
 					if (req.handshake.net !== senderNodeInfo.net) throw new Error();
 					await NODE.add({
 						keyID: senderHash,
@@ -75,7 +75,7 @@ const requestListener = (async (req, res) => {
 						ping: senderNodeInfo.ping
 					});
 				} catch(e) {
-					// console.log(e);
+					console.log(e);
 				}
 
 			// newMessage
@@ -85,6 +85,7 @@ const requestListener = (async (req, res) => {
 					|| MESSAGE.list[req.newMessage.hash] !== undefined) throw new Error();
 					let currentTime = new Date().getTime();
 					let infoNode = await NODE.getInfo({
+						prot: req.newMessage.prot,
 						host: req.newMessage.host,
 						port: req.newMessage.port
 					});
@@ -93,6 +94,7 @@ const requestListener = (async (req, res) => {
 					|| (MESSAGE.hasExpired(req.newMessage.timestamp))
 					|| !((req.newMessage.timestamp + inequal) < currentTime)) throw new Error();
 					await MESSAGE.add(req.newMessage);
+					req.newMessage.prot = config.prot;
 					req.newMessage.host = config.host;
 					req.newMessage.port = config.port;
 					await NODE.sendMessageToAll({ newMessage: req.newMessage });
@@ -110,8 +112,9 @@ const requestListener = (async (req, res) => {
 				timestamp: nonce
 			}));
 			try {
-				if (MESSAGE.list[hash] !== undefined) throw new Error();
+				if (MESSAGE.list[hash] !== undefined) throw new Error('The message is already in the list of known messages.');
 				let message = {
+					prot: config.prot,
 					host: config.host,
 					port: config.port,
 					hash: hash,
@@ -121,7 +124,7 @@ const requestListener = (async (req, res) => {
 				await MESSAGE.add(message);
 				await NODE.sendMessageToAll({ newMessage: message });
 			} catch(e) {
-				// console.log(e);
+				console.log(e);
 			}
 
 		} else {
@@ -145,6 +148,7 @@ const requestListener = (async (req, res) => {
 			case '/info':
 				let info = JSON.stringify({
 					net: config.net,
+					prot: config.prot,
 					host: config.host,
 					port: config.port,
 					time: new Date().getTime()
@@ -184,7 +188,7 @@ const requestListener = (async (req, res) => {
 
 const http = require('http');
 const https = require('https');
-if (listen[0] === 'https' && config.key && config.cert) {
+if (config.prot === 'https' && config.key && config.cert) {
 	const options = {
 		key: fs.readFileSync(config.key),	// private-key.pem (or privkey.pem for certbot)
 		cert: fs.readFileSync(config.cert)	// certificate.pem (or fullchain.pem for certbot)
@@ -196,7 +200,7 @@ if (listen[0] === 'https' && config.key && config.cert) {
 } else {
 	// create server
 	http.createServer(requestListener).listen(config.port, config.host, () => {
-		console.log('\x1b[7m%s\x1b[0m', `Server is running on http://${config.host}:${config.port}`);
+		console.log('\x1b[7m%s\x1b[0m', `Server is running on ${config.prot}://${config.host}:${config.port}`);
 	});
 }
 
@@ -213,6 +217,7 @@ if (listen[0] === 'https' && config.key && config.cert) {
 				await NODE.add({
 					keyID: keys[i],
 					net: list[keys[i]].net,
+					prot: list[keys[i]].prot,
 					host: list[keys[i]].host,
 					port: list[keys[i]].port,
 					ping: 10
