@@ -57,7 +57,7 @@ const requestListener = (async (req, res) => {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
 			req = JSON.parse(data);
-			console.log(req);
+			// console.log(req);
 
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
@@ -71,12 +71,13 @@ const requestListener = (async (req, res) => {
 					await NODE.add({
 						keyID: senderHash,
 						net: req.handshake.net,
+						prot: req.handshake.prot,
 						host: req.handshake.host,
 						port: req.handshake.port,
 						ping: senderNodeInfo.ping
 					});
 				} catch(e) {
-					console.log(e);
+					// console.log(e);
 				}
 
 			// newMessage
@@ -125,7 +126,7 @@ const requestListener = (async (req, res) => {
 				await MESSAGE.add(message);
 				await NODE.sendMessageToAll({ newMessage: message });
 			} catch(e) {
-				console.log(e);
+				// console.log(e);
 			}
 
 		} else {
@@ -229,6 +230,7 @@ if (config.prot === 'https' && config.key && config.cert) {
 		}
 	} catch(e) {
 		console.log(e);
+		process.exit(1);
 	}
 })();
 
