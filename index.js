@@ -34,6 +34,8 @@ try {
 let NODE = new nznode(config);
 let MESSAGE = new nzmessage(config);
 
+config.keyID = NODE.getNodeHash(config);
+
 //process.stdout.write('\x1Bc');
 console.log('\x1b[7m%s\x1b[0m', 'nzserver');
 console.log(process.platform + '/' + process.arch);
