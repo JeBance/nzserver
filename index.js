@@ -25,6 +25,7 @@ try {
 		config.host = listen[0];
 		config.port = listen[1] || '28262';
 	}
+	config.port = parseInt(config.port);
 } catch(e) {
 	console.error(e);
 	process.exit(1);
