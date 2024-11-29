@@ -1,1 +1,16 @@
-{"cebbe3fb84d4977184ce954777528321":{"net":"ALPHA","prot":"http","host":"194.87.214.40","port":28262}}
+{
+  "cebbe3fb84d4977184ce954777528321": {
+    "net": "ALPHA",
+    "prot": "http",
+    "host": "194.87.214.40",
+    "port": 28262,
+    "ping": 268
+  },
+  "0fa208709bdbe958016d4c72bf61c7a5": {
+    "net": "ALPHA",
+    "prot": "https",
+    "host": "jebance.ru",
+    "port": 28262,
+    "ping": 230
+  }
+}
