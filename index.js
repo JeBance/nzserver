@@ -100,7 +100,8 @@ const requestListener = (async (req, res) => {
 					let inequal = currentTime - (infoNode.time + infoNode.ping);
 					if (!hasPGPstructure(req.newMessage.message)
 					|| (MESSAGE.hasExpired(req.newMessage.timestamp))
-					|| !((req.newMessage.timestamp + inequal) < currentTime)) throw new Error();
+					|| !((req.newMessage.timestamp + inequal) < currentTime)
+					|| (infoNode.net !== config.net)) throw new Error();
 					await MESSAGE.add(req.newMessage);
 					req.newMessage.prot = config.prot;
 					req.newMessage.host = config.host;
