@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-const config = {};
+const config = {
+	autoDel: 0
+};
 const process = require('process');
 const nzcli = require('nzcli');
 const fs = require('fs');
@@ -157,7 +159,10 @@ const requestListener = (async (req, res) => {
 					prot: config.prot,
 					host: config.host,
 					port: config.port,
-					time: new Date().getTime()
+					time: new Date().getTime(),
+					autoDel: config.autoDel,
+					firstMessage: MESSAGE.getFirstMessageHash(),
+					lastMessage: MESSAGE.getLastMessageHash()
 				});
 				res.writeHead(200);
 				res.end(info);
@@ -257,18 +262,16 @@ if (config.scan !== undefined && config.scan === 'on') {
 }
 
 // auto delete message function
-if (config.autoDel !== undefined) {
-	config.autoDel = Number(config.autoDel);
-	if (config.autoDel !== null && config.autoDel > 0) {
-		console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
-		let checkingMessages = setInterval(async () => {
-			let currentTime = new Date().getTime();
-			let keys = Object.keys(MESSAGE.list);
-			for (let i = 0, l = keys.length; i < l; i++) {
-				if (MESSAGE.hasExpired(MESSAGE.list[keys[i]])) {
-					MESSAGE.remove(keys[i]);
-				}
+config.autoDel = Number(config.autoDel);
+if (config.autoDel > 0) {
+	console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
+	let checkingMessages = setInterval(async () => {
+		let currentTime = new Date().getTime();
+		let keys = Object.keys(MESSAGE.list);
+		for (let i = 0, l = keys.length; i < l; i++) {
+			if (MESSAGE.hasExpired(MESSAGE.list[keys[i]])) {
+				MESSAGE.remove(keys[i]);
 			}
-		}, 1000);
-	}
+		}
+	}, 1000);
 }
