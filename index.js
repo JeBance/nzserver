@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-const config = {
+let config = {
 	autoDel: 0
 };
 const process = require('process');
 const nzcli = require('nzcli');
+const nzconfig = require('nzconfig');
 const fs = require('fs');
 const { getHASH,
 		hasPGPstructure,
@@ -11,6 +12,11 @@ const { getHASH,
 const nzmessage = require('nzmessage');
 const nznode = require('nznode');
 const cli = new nzcli(config, process);
+
+if ((config.config !== undefined) && (typeof config.config === 'string')) {
+	config = new nzconfig(config);
+	config.writeConfigFile();
+}
 
 try {
 	if (!config.listen) throw new Error('The required parameter "listen" is missing.');
