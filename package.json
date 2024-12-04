@@ -1,6 +1,6 @@
 {
   "name": "nzserver",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "main": "index.js",
   "bin": {
     "nzserver": "index.js"
@@ -33,7 +33,7 @@
     "nzcli": "^1.0.6",
     "nzconfig": "^1.0.0",
     "nzfunc": "^1.0.6",
-    "nzmessage": "^1.1.5",
-    "nznode": "^1.1.11"
+    "nzmessage": "^1.1.6",
+    "nznode": "^1.1.12"
   }
 }

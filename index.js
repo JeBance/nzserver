@@ -39,12 +39,14 @@ try {
 	process.exit(1);
 }
 
-let NODE = new nznode(config);
 let MESSAGE = new nzmessage(config);
+MESSAGE.autoDel();
 
-(async () => {
-	config.keyID = await NODE.getNodeHash(config);
-})();
+let NODE = new nznode(config);
+config.keyID = NODE.getNodeHash(config);
+NODE.firstNodeSearch();
+NODE.searchNodesInLocalNetwork();
+NODE.checkNodes(MESSAGE);
 
 //process.stdout.write('\x1Bc');
 console.log('\x1b[7m%s\x1b[0m', 'nzserver');
@@ -121,13 +123,13 @@ const requestListener = (async (req, res) => {
 		// encrypted messages (just save and give)
 		} else if (hasPGPstructure(data)) {
 			res.writeHead(200);
-			res.end(JSON.stringify({
-				result: 'Data successfully received',
-				hash: hash,
-				timestamp: nonce
-			}));
 			try {
 				if (MESSAGE.list[hash] !== undefined) throw new Error('The message is already in the list of known messages.');
+				res.end(JSON.stringify({
+					result: 'Data successfully received',
+					hash: hash,
+					timestamp: nonce
+				}));
 				let message = {
 					prot: config.prot,
 					host: config.host,
@@ -139,6 +141,12 @@ const requestListener = (async (req, res) => {
 				await MESSAGE.add(message);
 				await NODE.sendMessageToAll({ newMessage: message });
 			} catch(e) {
+				let message = await MESSAGE.getMessage(hash);
+				res.end(JSON.stringify({
+					result: 'Data successfully received',
+					hash: hash,
+					timestamp: message.timestamp
+				}));
 				// console.log(e);
 			}
 
@@ -213,7 +221,7 @@ if (config.prot === 'https' && config.key && config.cert) {
 	};
 	// create server
 	https.createServer(options, requestListener).listen(config.port, config.host, () => {
-		console.log('\x1b[7m%s\x1b[0m', `Server is running on https://${config.host}:${config.port}`);
+		console.log('\x1b[7m%s\x1b[0m', `Server is running on ${config.prot}://${config.host}:${config.port}`);
 	});
 } else {
 	// create server
@@ -222,63 +230,3 @@ if (config.prot === 'https' && config.key && config.cert) {
 	});
 }
 
-
-
-// first node search
-(async () => {
-	try {
-		let response = await fetch('https://raw.githubusercontent.com/JeBance/nzserver/refs/heads/gh-pages/hosts.json');
-		if (response.ok) {
-			let list = await response.json();
-			let keys = Object.keys(list);
-			for (let i = 0, l = keys.length; i < l; i++) {
-				await NODE.add({
-					keyID: keys[i],
-					net: list[keys[i]].net,
-					prot: list[keys[i]].prot,
-					host: list[keys[i]].host,
-					port: list[keys[i]].port,
-					ping: 10
-				});
-			}
-		} else {
-			console.log(response.status);
-		}
-	} catch(e) {
-		console.log(e);
-		process.exit(1);
-	}
-})();
-
-// check nodes
-setInterval(async () => {
-	await NODE.checkingNodes();
-	// function for synchronizing messages with other nodes
-	let messages = {};
-	let keys = Object.keys(NODE.nodes);
-	for (let i = 0, l = keys.length; i < l; i++) {
-		messages = await NODE.getMessages(NODE.nodes[keys[i]]);
-		await MESSAGE.updateMessages(messages, NODE.nodes[keys[i]], NODE);
-	}
-}, 1000);
-
-// search nodes in local network
-if (config.scan !== undefined && config.scan === 'on') {
-	console.log('Local network scan started');
-	NODE.searchingNodes();
-}
-
-// auto delete message function
-config.autoDel = Number(config.autoDel);
-if (config.autoDel > 0) {
-	console.log('Automatic message deletion enabled (' + config.autoDel + ' min)');
-	let checkingMessages = setInterval(async () => {
-		let currentTime = new Date().getTime();
-		let keys = Object.keys(MESSAGE.list);
-		for (let i = 0, l = keys.length; i < l; i++) {
-			if (MESSAGE.hasExpired(MESSAGE.list[keys[i]])) {
-				MESSAGE.remove(keys[i]);
-			}
-		}
-	}, 1000);
-}
