@@ -43,7 +43,7 @@ let MESSAGE = new nzmessage(config);
 MESSAGE.autoDel();
 
 let NODE = new nznode(config);
-config.keyID = NODE.getNodeHash(config);
+(async () => { config.keyID = await NODE.getNodeHash(config) })();
 NODE.firstNodeSearch();
 NODE.searchNodesInLocalNetwork();
 NODE.checkNodes(MESSAGE);

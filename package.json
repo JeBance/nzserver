@@ -1,6 +1,6 @@
 {
   "name": "nzserver",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "main": "index.js",
   "bin": {
     "nzserver": "index.js"
@@ -32,6 +32,7 @@
   "dependencies": {
     "nzcli": "^1.0.6",
     "nzconfig": "^1.0.0",
+    "nzfsdb": "^2.0.0",
     "nzfunc": "^1.0.6",
     "nzmessage": "^1.1.6",
     "nznode": "^1.1.12"
