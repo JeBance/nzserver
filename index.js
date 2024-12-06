@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 let config = {
-	autoDel: 0
+	autoDel: 0,
+	log: true
 };
 const process = require('process');
 const nzcli = require('nzcli');
@@ -17,6 +18,8 @@ if ((config.config !== undefined) && (typeof config.config === 'string')) {
 	config = new nzconfig(config);
 	config.writeConfigFile();
 }
+
+if (config.log === 'false') config.log = false;
 
 try {
 	if (!config.listen) throw new Error('The required parameter "listen" is missing.');
