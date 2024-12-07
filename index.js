@@ -38,7 +38,7 @@ try {
 	}
 	config.port = parseInt(config.port);
 } catch(e) {
-	if (this.CONFIG.log) console.log('Error:', e);
+	if (this.config.log) console.log('Error:', e);
 	process.exit(1);
 }
 
@@ -74,7 +74,7 @@ const requestListener = (async (req, res) => {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
 			req = JSON.parse(data);
-			if (this.CONFIG.log) console.log(req);
+			if (this.config.log) console.log(req);
 
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
@@ -94,7 +94,7 @@ const requestListener = (async (req, res) => {
 						ping: senderNodeInfo.ping
 					});
 				} catch(e) {
-					if (this.CONFIG.log) console.log('Error:', e);
+					if (this.config.log) console.log('Error:', e);
 				}
 
 			// newMessage
@@ -119,7 +119,7 @@ const requestListener = (async (req, res) => {
 					req.newMessage.port = config.port;
 					await NODE.sendMessageToAll({ newMessage: req.newMessage });
 				} catch(e) {
-					if (this.CONFIG.log) console.log('Error:', e);
+					if (this.config.log) console.log('Error:', e);
 				}
 			}
 
@@ -150,7 +150,7 @@ const requestListener = (async (req, res) => {
 					hash: hash,
 					timestamp: message.timestamp
 				}));
-				if (this.CONFIG.log) console.log('Error:', e);
+				if (this.config.log) console.log('Error:', e);
 			}
 
 		} else {
