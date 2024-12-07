@@ -84,10 +84,15 @@ Required parameters for server configuration:
 
 `autoDel` - automatically delete messages after a specified time in minutes. Use `autoDel="15"` to set the time parameter. Autodelete is disabled by default.
 
-`key` - is the absolute path to the private key file. For example, `/test/keys/privkey.pem`.
+`key` - is the absolute path to the private key file. For example, `key="/test/keys/privkey.pem"`.
 
-`cert` - is the absolute path to the certificate file. For example, `/test/keys/fullchain.pem`.
+`cert` - is the absolute path to the certificate file. For example, `cert="/test/keys/fullchain.pem"`.
 
+`config` - absolute path to the configuration file. For example, `config="/home/user/nz/config.json"`. The first time you run it, a configuration file will be created with all the parameters entered. Subsequently, you can run the server with only the config parameter to load the saved parameters.
+
+`db` - absolute path to the database folder. For example, `db="/home/user/nz/DB/"`. If this parameter is missing, the data is stored in RAM while the program is running and is not saved to disk.
+
+`log` - display information and errors that occur during server operation. By default, `true`. To disable, enter `log="false"`.
 
 ### API
 
@@ -108,11 +113,13 @@ curl 192.168.1.10:28262/info
 ```json
 {
   "net": "ALPHA",
-  "host": "192.168.1.10",
-  "port": "28262",
-  "time": 1731683656118,
-  "fingerprint": "df4b30f8a8e5022b9b114d606bc7041747b9f2c9",
-  "publicKey": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxjMEZzdZGBYJKwYBBAHaRw8BAQdAaL0zH5vQmG1KKKfzyCIPEtlaBY/A/74w\n6hwIUVjrMK/NJU9sZWcgUHJ1ZGtvdiA8b2xlZy5wcnVka292QGdtYWlsLmNv\nbT7CjAQQFgoAPgWCZzdZGAQLCQcICZBrxwQXR7nyyQMVCAoEFgACAQIZAQKb\nAwIeARYhBN9LMPio5QIrmxFNYGvHBBdHufLJAACsmAEAqtL6h92JScLtl79B\nKhmOJ+W/aqsPe5c5v0YuGl8NCJUBAIxJa48m3VyglizHfydaUuh6ByOIafQm\nV6FKJ6DFo64GzjgEZzdZGBIKKwYBBAGXVQEFAQEHQK2beqfv6hLQNYKlznBF\nPVJtfiBSG196VzZ1atXTMLZoAwEIB8J4BBgWCgAqBYJnN1kYCZBrxwQXR7ny\nyQKbDBYhBN9LMPio5QIrmxFNYGvHBBdHufLJAAA7LgEAzElp6e2wvPtu+3jY\nfxAALOZMSrnrUCnr8Oh10S5UwbkA/1Z+v/ApXKfmWuLBi7dLd272Y9PZp2VU\n8IQ23PlA9gMP\n=lzOh\n-----END PGP PUBLIC KEY BLOCK-----\n"
+  "prot": "https",
+  "host": "jebance.ru",
+  "port": 28262,
+  "time": 1733574324628,
+  "autoDel": 0,
+  "firstMessage": "f6d388e20df4f7b97f5d9e10225a267d",
+  "lastMessage": "7a8d8650a5c0471a1cb5dfda5dd1d2f4"
 }
 ```
 
@@ -126,12 +133,13 @@ curl 192.168.1.10:28262/getNodes
 
 ```json
 {
-  "net": "ALPHA",
-  "host": "192.168.1.10",
-  "port": "28262",
-  "time": 1731683656118,
-  "fingerprint": "df4b30f8a8e5022b9b114d606bc7041747b9f2c9",
-  "publicKey": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxjMEZzdZGBYJKwYBBAHaRw8BAQdAaL0zH5vQmG1KKKfzyCIPEtlaBY/A/74w\n6hwIUVjrMK/NJU9sZWcgUHJ1ZGtvdiA8b2xlZy5wcnVka292QGdtYWlsLmNv\nbT7CjAQQFgoAPgWCZzdZGAQLCQcICZBrxwQXR7nyyQMVCAoEFgACAQIZAQKb\nAwIeARYhBN9LMPio5QIrmxFNYGvHBBdHufLJAACsmAEAqtL6h92JScLtl79B\nKhmOJ+W/aqsPe5c5v0YuGl8NCJUBAIxJa48m3VyglizHfydaUuh6ByOIafQm\nV6FKJ6DFo64GzjgEZzdZGBIKKwYBBAGXVQEFAQEHQK2beqfv6hLQNYKlznBF\nPVJtfiBSG196VzZ1atXTMLZoAwEIB8J4BBgWCgAqBYJnN1kYCZBrxwQXR7ny\nyQKbDBYhBN9LMPio5QIrmxFNYGvHBBdHufLJAAA7LgEAzElp6e2wvPtu+3jY\nfxAALOZMSrnrUCnr8Oh10S5UwbkA/1Z+v/ApXKfmWuLBi7dLd272Y9PZp2VU\n8IQ23PlA9gMP\n=lzOh\n-----END PGP PUBLIC KEY BLOCK-----\n"
+  "cebbe3fb84d4977184ce954777528321": {
+    "net": "ALPHA",
+    "prot": "http",
+    "host": "194.87.214.40",
+    "port": 28262,
+    "ping": 13
+  }
 }
 ```
 
@@ -145,9 +153,14 @@ curl 192.168.1.10:28262/getMessages
 
 ```json
 {
-  "23ea0c83aebcd6f19d5cd11d1e5857e8": 1731684000961,
-  "0934kfi3op4ijcv1erfrefref344frw4": 1731684001234,
-  "3487o5yj89mr874corymd3o8x4r7hy88": 1731684005312
+  "f6d388e20df4f7b97f5d9e10225a267d": 1733142817419,
+  "c65a19a0b3553f26c8a28e88583bfef0": 1733319109690,
+  "7c378688b095ee041796ecdb1ab46c67": 1733319496602,
+  "4e3e36da8db909738c4db3421f21c56b": 1733319834535,
+  "817cd2674614daf8b0783880343289a6": 1733320014876,
+  "18567235f0f338b121786dcf6066119d": 1733320031683,
+  "c36453e1337fcb02cf155a2aa1742c6b": 1733320040411,
+  "7a8d8650a5c0471a1cb5dfda5dd1d2f4": 1733320063843
 }
 ```
 
@@ -161,9 +174,9 @@ curl 192.168.1.10:28262/getMessage?23ea0c83aebcd6f19d5cd11d1e5857e8
 
 ```json
 {
-  "hash": "23ea0c83aebcd6f19d5cd11d1e5857e8",
-  "timestamp": 1731684000961,
-  "message": "-----BEGIN PGP MESSAGE-----\n\nwV4DBQGY4mV2fjoSAQdA0/RtZfXvRSK3/u2KimWaM2SN0bsht7mHDDrTRYZj\nikIwDqKLlP71OeptmCA64FOaUMg1Ocf9DibuEmEMG2qFnxhGMZtfIy3H01Ny\nQQCqLipo0sAAAUVo1+15lnhqqOdaUEEjGCS68taQs2Q+27fqkg62iZPhyzFv\namoI4VlhmM6qT+6vH2YAcNLqaGs0i0IWpSppV0uQ8+lnNkjFgCFXgd1WYUSa\nXER8V429Dc3CrFFJV8TBwRv6LfEzsVQQPXAprpmi/r2eW49a3mm13fckQsOj\nlJiNweKsHc/Dh+209vblASHLezHbpFNDcYt4djgSHbsyyvsxxD5UMsmzNZvx\nZUHEyW/jeqlAyswuvJQ4nqRGi7AZ\n=WYqw\n-----END PGP MESSAGE-----\n"
+  "hash": "f6d388e20df4f7b97f5d9e10225a267d",
+  "timestamp": 1733142817419,
+  "message": "\"-----BEGIN PGP MESSAGE-----\\n\\nKL4DBQGY4mV2fjoSAQdAJaKBeO3RMxtv7p4oHwk79SfhYa0ocXf06zRoH6Ly\\nKFowIojl8OwzQ6uI2D5boP+eq4PmcxLyRWY+YUvm/ydWp5P6E9VOcquwRDaA\\nWv93jjrk0sAAASsrDUF6gk3Xhx51keQK4MLUr/LMzCIZdzXcoosu8dRg0yB4\\nUUUTPF0vfhBkoMQJLkvxSnbdaUrWDOlLjKP2mhFm3aIQEIcGlZaMLt/TA78w\\nhzviZ2oJs9HmyZom88qUFz1ieC20tna8DgiosH8vfwmF+LH8nDm1Vsubiudj\\nKApD6/lHcnJJ5XHVokBtx2H864eIc2JjwlPNKYgrHxe+2Jxoj6a+CgmiHGIl\\nPsPeg1YsDf5xGdIlB1ksl3kF/URe\\n=ciNI\\n-----END PGP MESSAGE-----\""
 }
 ```
 
@@ -176,42 +189,32 @@ curl 192.168.1.10:28262/getMessage?23ea0c83aebcd6f19d5cd11d1e5857e8
 `handshake` - is used to send your host and port.
 
 ```js
-const http = require('http');
-
-let jsonReq = {
+const jsonRequest = {
 	handshake: {
 		net: 'ALPHA',
-		host: '192.168.1.10',
+		prot: 'http',
+		host: '194.87.214.40',
 		port: 28262
 	}
 };
 
-console.log('Sending request...');
-
-let options = {
-	host: config.host,
-	port: config.port,
-	path: '/',
-	method: 'POST',
-	headers: {
-		'Content-Type': 'application/json',
-		'Content-Length': (JSON.stringify(jsonReq)).length
+(async () => {
+	try {
+		let url = 'https://jebance.ru:28262/';
+		let response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Content-Length': (JSON.stringify(jsonRequest)).length
+			},
+			body: (JSON.stringify(jsonRequest))
+		});
+		console.log(response);
+		if (response.ok) console.log(await response.json());
+	} catch(e) {
+		console.error(e);
 	}
-};
-
-const req = http.request(options, (res) => {
-	console.log(`statusCode: ${res.statusCode}`)
-	res.on('data', (d) => {
-		console.log(JSON.parse(d));
-	})
-})
-
-req.on('error', (error) => {
-	console.error(error);
-})
-
-req.write(JSON.stringify(jsonReq));
-req.end();
+})();
 ```
 
 #### newMessage
@@ -219,46 +222,51 @@ req.end();
 `newMessage` - used to transmit a received new message to other nodes in the network.
 
 ```js
-const http = require('http');
+const crypto = require('crypto');
 
-let jsonReq = {
+const message = `-----BEGIN PGP MESSAGE-----
+
+wV4DBQGY4mV2fjoSAQdAJaKBeO3RMxtv7p4oHwk79SfhYa0ocXf06zRoH6Ly
+LFowIojl8OwzQ6uI2D5boP+eq4PmcxLyRWY+YUvm/ydWp5P6E9VOcquwRDaA
+Wv93jjrk0sAAASsrDUF6gk3Xhx51keQK4MLUr/LMzCIZdzXcoosu8dRg0yB4
+UQnTPF0vfhBkoMQJLkvxSnbdaUrWDOlLjKP2mhFm3aIQEIcGlZaMLt/TA78w
+hzviZ2oJs9HmyZom88qUFz1ieC20tna8DgiosH8vfwmF+LH8nDm1Vsubiudj
+KApD6/lHcnJJ5XHVokBtx2H864eIc2JjwlPNKYgrHxe+2Jxoj6a+CgmiHGIl
+PsPeg1YsDf5xGdIlB1ksl3kF/URe
+=ciNI
+-----END PGP MESSAGE-----`;
+
+const hash = crypto.createHash('md5').update(message).digest('hex');
+
+const jsonRequest = {
 	newMessage: {
-		host: '192.168.1.10',
+		net: 'ALPHA',
+		prot: 'https',
+		host: 'jebance.ru',
 		port: 28262,
-		hash: '23ea0c83aebcd6f19d5cd11d1e5857e8',
-		timestamp: 1731684000961,
-		message: '-----BEGIN PGP MESSAGE----- ... -----END PGP MESSAGE-----\n'
+		hash: hash,
+		timestamp: new Date().getTime(),
+		message: message
 	}
 };
 
-let messageSender = setInterval(async () => {
-	console.log('\nSending request...');
-
-	let options = {
-		host: config.host,
-		port: config.port,
-		path: '/',
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'Content-Length': (JSON.stringify(jsonReq)).length
-		}
-	};
-
-	const req = http.request(options, (res) => {
-		console.log(`statusCode: ${res.statusCode}`)
-		res.on('data', (d) => {
-			console.log(JSON.parse(d));
-		})
-	})
-
-	req.on('error', (error) => {
-		console.error(error);
-	})
-
-	req.write(JSON.stringify(jsonReq));
-	req.end();
-}, 5000);
+(async () => {
+	try {
+		let url = 'https://jebance.ru:28262/';
+		let response = await fetch(url, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Content-Length': (JSON.stringify(jsonRequest)).length
+			},
+			body: (JSON.stringify(jsonRequest))
+		});
+		console.log(response);
+		if (response.ok) console.log(await response.json());
+	} catch(e) {
+		console.error(e);
+	}
+})();
 ```
 
 
@@ -267,58 +275,43 @@ let messageSender = setInterval(async () => {
 For messages received from the client, the POST request header must contain `'Content-Type': 'text/html'`.
 
 ```js
-const http = require('http');
-const securePGPstorage = require('secure-pgp-storage');
-const letsconfig = require('letsconfig');
+const message = `-----BEGIN PGP MESSAGE-----
 
-const config = new letsconfig({}, '/home/user/path/to/config/');
-const PGP = new securePGPstorage();
+MN4090GJNdkoijglfdfkcsdergfregev7p4oHwk79SfhYa0ocXf06zRoH6Ly
+KFowIojl8OwzQ6uI2D5boP+eq4PmcxLyRWY+YUvm/ydWp5P6E9VOcquwRDaA
+WssddsvedrgvfSsrDUF6gk3Xhx51keQK4MLUr/LMzCIZdzXcoosu8dRg0yB4
+UUUTPF0vfhBkoMQJLkvxSnbdaUrWDOlLjKP2mhFm3aIQEIcGlZaMLt/TA78w
+hzviZ2oJs9HmyZom88qUFz1ieC20tna8DgiosH8vfwmF+LH8nDm1Vsubiudj
+KApD6/lHcnJJ5XHVokBtx2H864eIc2JjwlPNKYgrHxe+2Jxoj6a+CgmiHGIl
+PsPeg1YsDf5xGdIlB1ksl3kF/URe
+=ciNI
+-----END PGP MESSAGE-----`;
 
-let encryptedMessage = '';
+console.log(message.slice(0,27));
+console.log(message.slice(message.length - 25));
 
-const encrypt = new Promise((resolve, reject) => {
-	try{
-		(async () => {
-			await PGP.decryptStorage(config.secureKey, config.passphrase)
-			encryptedMessage = await PGP.encryptMessage('Hello world!', PGP.publicKeyArmored, true);
-			console.log(encryptedMessage);
-			resolve(true);
-		})();
-	} catch(e) {
-		console.log(e);
-	}
-});
+if ((message.slice(0,27) === '-----BEGIN PGP MESSAGE-----')
+&& (message.slice(message.length - 25) === '-----END PGP MESSAGE-----')) {
+	console.log('Message has PGP structure');
+}
 
-encrypt.then((value) => {
-	let messageSender = setInterval(async () => {
-		console.log('\nSending request...');
-
-		let options = {
-			host: config.host,
-			port: config.port,
-			path: '/',
+(async () => {
+	try {
+		let url = 'http://194.87.214.40:28262/';
+		let response = await fetch(url, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'text/html',
-				'Content-Length': encryptedMessage.length
-			}
-		};
-
-		const req = http.request(options, (res) => {
-			console.log(`statusCode: ${res.statusCode}`)
-			res.on('data', (d) => {
-				console.log(JSON.parse(d));
-			})
-		})
-
-		req.on('error', (error) => {
-			console.error(error);
-		})
-
-		req.write(encryptedMessage);
-		req.end();
-	}, 5000);
-});
+				'Content-Length': message.length
+			},
+			body: message
+		});
+		console.log(response);
+		if (response.ok) console.log(await response.json());
+	} catch(e) {
+		console.error(e);
+	}
+})();
 ```
 
 ### License

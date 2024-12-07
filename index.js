@@ -38,7 +38,7 @@ try {
 	}
 	config.port = parseInt(config.port);
 } catch(e) {
-	console.error(e);
+	if (this.CONFIG.log) console.log('Error:', e);
 	process.exit(1);
 }
 
@@ -51,7 +51,7 @@ NODE.firstNodeSearch();
 NODE.searchNodesInLocalNetwork();
 NODE.checkNodes(MESSAGE);
 
-//process.stdout.write('\x1Bc');
+process.stdout.write('\x1Bc');
 console.log('\x1b[7m%s\x1b[0m', 'nzserver');
 console.log(process.platform + '/' + process.arch);
 console.log('pid ' + process.ppid);
@@ -74,7 +74,7 @@ const requestListener = (async (req, res) => {
 			res.writeHead(200);
 			res.end(JSON.stringify({result:'Data successfully received'}));
 			req = JSON.parse(data);
-			// console.log(req);
+			if (this.CONFIG.log) console.log(req);
 
 			// handshake
 			if (req.hasOwnProperty('handshake') === true) {
@@ -94,7 +94,7 @@ const requestListener = (async (req, res) => {
 						ping: senderNodeInfo.ping
 					});
 				} catch(e) {
-					// console.log(e);
+					if (this.CONFIG.log) console.log('Error:', e);
 				}
 
 			// newMessage
@@ -119,7 +119,7 @@ const requestListener = (async (req, res) => {
 					req.newMessage.port = config.port;
 					await NODE.sendMessageToAll({ newMessage: req.newMessage });
 				} catch(e) {
-					// console.log(e);
+					if (this.CONFIG.log) console.log('Error:', e);
 				}
 			}
 
@@ -150,7 +150,7 @@ const requestListener = (async (req, res) => {
 					hash: hash,
 					timestamp: message.timestamp
 				}));
-				// console.log(e);
+				if (this.CONFIG.log) console.log('Error:', e);
 			}
 
 		} else {
