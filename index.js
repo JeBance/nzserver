@@ -49,6 +49,9 @@ if (!config.log) process.stdout.write('\x1Bc');
 console.log('\x1b[7m%s\x1b[0m', 'nzserver');
 console.log(process.platform + '/' + process.arch);
 console.log('pid ' + process.ppid);
+var childProcess = require('child_process');
+var dir_server = __dirname;
+console.log(childProcess.execSync(`cd ${dir_server} && npm list`).toString());
 
 if (config.prot === 'https' && config.key && config.cert) {
 	const fs = require('fs');
