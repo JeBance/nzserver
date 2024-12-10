@@ -2,6 +2,8 @@
 
 let config = {
 	autoDel: 0,
+	autoCheckNodes: 1,
+	autoCheckMessages: 1,
 	log: true
 };
 
@@ -18,6 +20,8 @@ if (config.config !== undefined) {
 }
 
 if (config.log === 'false') config.log = false;
+config.autoCheckNodes = config.autoCheckNodes * 1000;
+config.autoCheckMessages = config.autoCheckMessages * 1000;
 
 try {
 	if (!config.listen) throw new Error('The required parameter "listen" is missing.');
