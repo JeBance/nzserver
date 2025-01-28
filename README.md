@@ -112,14 +112,23 @@ curl 192.168.1.10:28262/info
 
 ```json
 {
+  "keyID": "0fa208709bdbe958016d4c72bf61c7a5",
   "net": "ALPHA",
   "prot": "https",
   "host": "jebance.ru",
   "port": 28262,
-  "time": 1733574324628,
+  "time": 1738030657608,
   "autoDel": 0,
-  "firstMessage": "f6d388e20df4f7b97f5d9e10225a267d",
-  "lastMessage": "7a8d8650a5c0471a1cb5dfda5dd1d2f4"
+  "autoCheckNodes": 1000,
+  "autoCheckMessages": 10000,
+  "firstMessage": {
+    "hash": "095f5a0566a3ff1dd76aad2400fdc938",
+    "timestamp": 1733839298941
+  },
+  "lastMessage": {
+    "hash": "e3ffc0c8d9cc447ecab3e5e577ef6803",
+    "timestamp": 1737461752833
+  }
 }
 ```
 
@@ -153,14 +162,17 @@ curl 192.168.1.10:28262/getMessages
 
 ```json
 {
-  "f6d388e20df4f7b97f5d9e10225a267d": 1733142817419,
-  "c65a19a0b3553f26c8a28e88583bfef0": 1733319109690,
-  "7c378688b095ee041796ecdb1ab46c67": 1733319496602,
-  "4e3e36da8db909738c4db3421f21c56b": 1733319834535,
-  "817cd2674614daf8b0783880343289a6": 1733320014876,
-  "18567235f0f338b121786dcf6066119d": 1733320031683,
-  "c36453e1337fcb02cf155a2aa1742c6b": 1733320040411,
-  "7a8d8650a5c0471a1cb5dfda5dd1d2f4": 1733320063843
+  "095f5a0566a3ff1dd76aad2400fdc938": 1733839298941,
+  "ac4b925d4b5cbdbe266b4681744dc1fe": 1733839318859,
+  "8d03e97aa504f42c2933395326f20af9": 1733839347377,
+  "63dae3412e6bce006de61760b7ae92cf": 1737033651927,
+  "f7b655809c0110410b4cf5de7ac2dd55": 1737037308098,
+  "8cc4b4f49b52d24a515e34733c615ccd": 1737202197983,
+  "b2d5f0b74cc92d8439f2dcdebe266669": 1737377676786,
+  "f6c643f3cb27c7d8464a7f3a19896cb6": 1737377759899,
+  "70d3f070453be3c9cbebf6e83325ed80": 1737377847852,
+  "755cf1b98c75c96a0b440ba0cadf3b0e": 1737461464210,
+  "e3ffc0c8d9cc447ecab3e5e577ef6803": 1737461752833
 }
 ```
 
@@ -169,14 +181,14 @@ curl 192.168.1.10:28262/getMessages
 `getMessage` - returns the message body.
 
 ```sh
-curl 192.168.1.10:28262/getMessage?23ea0c83aebcd6f19d5cd11d1e5857e8
+curl 192.168.1.10:28262/getMessage?755cf1b98c75c96a0b440ba0cadf3b0e
 ```
 
 ```json
 {
-  "hash": "f6d388e20df4f7b97f5d9e10225a267d",
-  "timestamp": 1733142817419,
-  "message": "\"-----BEGIN PGP MESSAGE-----\\n\\nKL4DBQGY4mV2fjoSAQdAJaKBeO3RMxtv7p4oHwk79SfhYa0ocXf06zRoH6Ly\\nKFowIojl8OwzQ6uI2D5boP+eq4PmcxLyRWY+YUvm/ydWp5P6E9VOcquwRDaA\\nWv93jjrk0sAAASsrDUF6gk3Xhx51keQK4MLUr/LMzCIZdzXcoosu8dRg0yB4\\nUUUTPF0vfhBkoMQJLkvxSnbdaUrWDOlLjKP2mhFm3aIQEIcGlZaMLt/TA78w\\nhzviZ2oJs9HmyZom88qUFz1ieC20tna8DgiosH8vfwmF+LH8nDm1Vsubiudj\\nKApD6/lHcnJJ5XHVokBtx2H864eIc2JjwlPNKYgrHxe+2Jxoj6a+CgmiHGIl\\nPsPeg1YsDf5xGdIlB1ksl3kF/URe\\n=ciNI\\n-----END PGP MESSAGE-----\""
+  "hash": "755cf1b98c75c96a0b440ba0cadf3b0e",
+  "timestamp": 1737461464210,
+  "message": "-----BEGIN PGP MESSAGE-----\n\nwV4DnvIUAxOdiVsSAQdAX1UpS6hzW2iJHW1GJBAdvUYsUFa1rVaGL9b3PYQ7\nogMwrK+RAJJQ4q+KxEh844o0EnB6R95OXrxNAIaTF3TW5fSYCah5YuWYMK2s\nHf6zRwsX0sBJAfom93A4yTcfU2Atrz8iz3ZHjfYrqu2KMN7E6rFJokk09G58\nlXQmKr6svriBctEbzU1J0msCjTvplb2+VJPRQi3WlDMLXCb34BFGG2M0SY3J\n0PF628MJKijebZMX6O0l33jZNQcjjJaWsnvUyp34ageGuj2JC1c+9qD81Uu9\nNvxQGrQPldyFLkDFcNH/RPMAciphspYiGVjg6uFbivDhzd8BcltrnCss2IfQ\nh3iA/dsO6TMyVor8fygNlSEyGf9aaiW6cPKW84UVh318DzgJeuYz0FyJTwLf\n/kL8xRs0He4uenDML98BiCCEQDOzGVefzf8t1vupneAcfgRawAebmF3li0Ao\n4RvQYw==\n=lW1H\n-----END PGP MESSAGE-----\n"
 }
 ```
 
