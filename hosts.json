@@ -12,5 +12,12 @@
     "host": "jebance.ru",
     "port": 28262,
     "ping": 230
+  },
+  "28175c42bdcb06aa98135def12a2eb62": {
+    "net": "ALPHA",
+    "prot": "https",
+    "host": "newzone.su",
+    "port": 28262,
+    "ping": 230
   }
 }
