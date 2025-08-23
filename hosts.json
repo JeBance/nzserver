@@ -1,23 +1,16 @@
 {
-  "cebbe3fb84d4977184ce954777528321": {
+  "28175c42bdcb06aa98135def12a2eb62": {
     "net": "ALPHA",
-    "prot": "http",
-    "host": "194.87.214.40",
+    "prot": "https",
+    "host": "newzone.su",
     "port": 28262,
-    "ping": 268
+    "ping": 10
   },
   "0fa208709bdbe958016d4c72bf61c7a5": {
     "net": "ALPHA",
     "prot": "https",
     "host": "jebance.ru",
     "port": 28262,
-    "ping": 230
-  },
-  "28175c42bdcb06aa98135def12a2eb62": {
-    "net": "ALPHA",
-    "prot": "https",
-    "host": "newzone.su",
-    "port": 28262,
-    "ping": 230
+    "ping": 10
   }
 }
